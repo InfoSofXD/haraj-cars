@@ -1,0 +1,59 @@
+name: haraj
+description: Haraj Cars
+publish_to: 'Cubix'
+version: 0.0.1
+
+environment:
+  sdk: '>=3.1.5 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Core Supabase
+  supabase_flutter: ^2.3.4
+  connectivity_plus: ^5.0.2
+  
+  # HTTP requests
+  http: ^1.1.0
+
+  # Tools
+  uuid: ^4.2.2
+  shared_preferences: ^2.2.2
+
+  # Media & Files
+  image_picker: ^1.0.7
+  camera: ^0.10.0
+  file_picker: ^5.5.0
+  image: ^4.0.17
+
+  # Device Features
+  permission_handler: ^11.0.0
+  vibration: ^1.8.4
+  device_info_plus: ^9.1.2
+  url_launcher: ^6.2.4
+  intl: ^0.18.1
+  geolocator: ^10.1.0
+  geocoding: ^2.1.0
+
+  
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^2.0.0
+
+assets:
+
+#----------#----------#----------#
+
+  # this is for Fonts
+
+  fonts:
+    # Tajawal
+    - family: Tajawal
+      fonts:
+        - asset: fonts/Tajawal-Medium.ttf
+
+flutter:
+  uses-material-design: true

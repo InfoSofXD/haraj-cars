@@ -1,0 +1,1 @@
+# Manheim Australia scraper module

@@ -1,0 +1,10 @@
+# Core dependencies (required)
+requests==2.31.0
+beautifulsoup4==4.12.2
+lxml==4.9.3
+
+# Optional dependencies for advanced scraping
+# Uncomment these if you want to use the advanced scrapers:
+# requests-html==0.10.0
+# selenium==4.15.0
+# webdriver-manager==4.0.1
