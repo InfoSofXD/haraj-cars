@@ -36,6 +36,10 @@ def scrape_car(url: str) -> dict:
         from manheim_com_au.manheim import scrape_car as manheim_scraper
         return manheim_scraper(url)
     
+    elif 'carfax.com' in domain:
+        from carfax_com.carfax import scrape_car as carfax_scraper
+        return carfax_scraper(url)
+    
     else:
         supported_sites = ', '.join(get_supported_sites())
         raise ValueError(f"Unsupported website: {domain}. Supported sites: {supported_sites}")
@@ -44,7 +48,7 @@ def get_supported_sites():
     """
     Returns a list of supported car websites
     """
-    return ['cars.com', 'manheim.com.au']
+    return ['cars.com', 'manheim.com.au', 'carfax.com']
 
 def is_supported_site(url: str) -> bool:
     """

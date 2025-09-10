@@ -36,24 +36,39 @@ dependencies:
   geolocator: ^10.1.0
   geocoding: ^2.1.0
 
-  
+  # Languages
+  flutter_localizations:
+    sdk: flutter
+  easy_localization: ^3.0.7+1
+
+  # App Appearance
+  flutter_native_splash: ^2.3.3
+  flutter_launcher_icons: ^0.13.1
+  window_manager: ^0.4.3
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^2.0.0
 
-assets:
+flutter:
+  assets:
 
-#----------#----------#----------#
+    # Language files
+    - assets/langs/
+
+    # Env
+    - .env
 
   # this is for Fonts
-
   fonts:
     # Tajawal
     - family: Tajawal
       fonts:
         - asset: fonts/Tajawal-Medium.ttf
 
-flutter:
+  # Material Design
   uses-material-design: true
+
+  # Languages
+  generate: true

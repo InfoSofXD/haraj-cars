@@ -68,7 +68,8 @@ def get_sites():
     sites = get_supported_sites()
     site_info = {
         'cars.com': 'Cars.com',
-        'manheim.com.au': 'Manheim Australia'
+        'manheim.com.au': 'Manheim Australia',
+        'carfax.com': 'Carfax'
     }
     
     return jsonify({
