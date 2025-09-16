@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'dart:ui';
 import '../../models/car.dart';
 import '../../services/favorites_service.dart';
-import '../../cards/car_card.dart';
+import '../../tools/cards/car_card.dart';
+import '../../../tools/Palette/theme.dart' as custom_theme;
 
 class FavoritesTab extends StatefulWidget {
   const FavoritesTab({Key? key}) : super(key: key);
@@ -99,8 +100,13 @@ class _FavoritesTabState extends State<FavoritesTab>
   @override
   Widget build(BuildContext context) {
     super.build(context); // Required for AutomaticKeepAliveClientMixin
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Container(
-      color: Colors.white,
+      color: theme.brightness == Brightness.dark
+          ? colorScheme.background
+          : Colors.white,
       child: Stack(
         children: [
           // Main Content
@@ -109,9 +115,11 @@ class _FavoritesTabState extends State<FavoritesTab>
               // Content (full screen, content scrolls under floating title)
               Expanded(
                 child: _isLoading
-                    ? const Center(child: CircularProgressIndicator())
+                    ? Center(
+                        child: CircularProgressIndicator(
+                            color: colorScheme.primary))
                     : _favoriteCars.isEmpty
-                        ? _buildEmptyState()
+                        ? _buildEmptyState(colorScheme)
                         : RefreshIndicator(
                             onRefresh: _loadFavoriteCars,
                             child: _buildFavoritesList(),
@@ -125,39 +133,39 @@ class _FavoritesTabState extends State<FavoritesTab>
             top: 0,
             left: 0,
             right: 0,
-            child: _buildFloatingTitle(),
+            child: _buildFloatingTitle(theme, colorScheme),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildEmptyState() {
-    return const Center(
+  Widget _buildEmptyState(ColorScheme colorScheme) {
+    return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
             Icons.favorite_border,
             size: 64,
-            color: Colors.grey,
+            color: colorScheme.onBackground.withOpacity(0.5),
           ),
-          SizedBox(height: 16),
+          const SizedBox(height: 16),
           Text(
             'No Favorites Yet',
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
-              color: Colors.grey,
+              color: colorScheme.onBackground.withOpacity(0.7),
               fontFamily: 'Tajawal',
             ),
           ),
-          SizedBox(height: 8),
+          const SizedBox(height: 8),
           Text(
             'Tap the heart icon on cars to add them to favorites',
             style: TextStyle(
               fontSize: 14,
-              color: Colors.grey,
+              color: colorScheme.onBackground.withOpacity(0.6),
               fontFamily: 'Tajawal',
             ),
             textAlign: TextAlign.center,
@@ -167,7 +175,7 @@ class _FavoritesTabState extends State<FavoritesTab>
     );
   }
 
-  Widget _buildFloatingTitle() {
+  Widget _buildFloatingTitle(ThemeData theme, ColorScheme colorScheme) {
     return Container(
       margin: const EdgeInsets.all(16),
       child: ClipRRect(
@@ -177,42 +185,34 @@ class _FavoritesTabState extends State<FavoritesTab>
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  const Color(0xFF2196F3).withOpacity(0.3),
-                  const Color(0xFF1976D2).withOpacity(0.4),
-                  const Color(0xFF1565C0).withOpacity(0.3),
-                ],
-              ),
+              color: theme.brightness == Brightness.dark
+                  ? Colors.grey[700]!.withOpacity(0.3)
+                  : custom_theme.light.shade100.withOpacity(0.3),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: const Color(0xFF42A5F5),
+                color: theme.brightness == Brightness.dark
+                    ? Colors.white
+                    : custom_theme.light.shade300,
                 width: 1,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFF2196F3).withOpacity(0.4),
+                  color: Colors.black.withOpacity(0.3),
                   spreadRadius: 0,
                   blurRadius: 20,
                   offset: const Offset(0, 8),
                 ),
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  spreadRadius: 0,
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
               ],
             ),
-            child: const Center(
+            child: Center(
               child: Text(
                 'Your Favorites',
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
-                  color: Colors.white,
+                  color: theme.brightness == Brightness.dark
+                      ? Colors.white
+                      : colorScheme.onSurface,
                   fontFamily: 'Tajawal',
                 ),
               ),

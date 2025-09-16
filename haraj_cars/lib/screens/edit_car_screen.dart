@@ -44,8 +44,15 @@ class _EditCarScreenState extends State<EditCarScreen> {
   String _selectedBrand = '';
 
   // New boolean fields
-  bool _status = true; // Default to available
-  bool _condition = false; // Default to used
+  int _status =
+      1; // Default to available (1 = available, 2 = unavailable, 3 = auction, 4 = sold)
+
+  // New timestamp fields
+  DateTime? _showAt;
+  DateTime? _unShowAt;
+  DateTime? _auctionStartAt;
+  DateTime? _auctionEndAt;
+  DateTime? _deleteAt;
 
   // Brands list
   List<String> _brands = [];
@@ -64,21 +71,7 @@ class _EditCarScreenState extends State<EditCarScreen> {
   }
 
   void _setupMileageListener() {
-    _mileageController.addListener(() {
-      final mileageText = _mileageController.text.trim();
-      if (mileageText.isNotEmpty) {
-        final mileage = int.tryParse(mileageText);
-        if (mileage != null) {
-          setState(() {
-            if (mileage == 0) {
-              _condition = true; // New
-            } else {
-              _condition = false; // Used
-            }
-          });
-        }
-      }
-    });
+    // Mileage listener removed - condition is now determined by mileage value
   }
 
   @override
@@ -166,7 +159,13 @@ class _EditCarScreenState extends State<EditCarScreen> {
 
     // Set new boolean fields
     _status = widget.car.status;
-    _condition = widget.car.condition;
+
+    // Set timestamp fields
+    _showAt = widget.car.showAt;
+    _unShowAt = widget.car.unShowAt;
+    _auctionStartAt = widget.car.auctionStartAt;
+    _auctionEndAt = widget.car.auctionEndAt;
+    _deleteAt = widget.car.deleteAt;
 
     // Set dropdown values
     _selectedTransmission = widget.car.transmission;
@@ -209,6 +208,59 @@ class _EditCarScreenState extends State<EditCarScreen> {
   void _removeOtherImage(int index) {
     setState(() {
       _otherImages.removeAt(index);
+    });
+  }
+
+  Future<void> _selectDate(BuildContext context, String fieldName) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2020),
+      lastDate: DateTime(2030),
+    );
+
+    if (picked != null) {
+      setState(() {
+        switch (fieldName) {
+          case 'showAt':
+            _showAt = picked;
+            break;
+          case 'unShowAt':
+            _unShowAt = picked;
+            break;
+          case 'auctionStartAt':
+            _auctionStartAt = picked;
+            break;
+          case 'auctionEndAt':
+            _auctionEndAt = picked;
+            break;
+          case 'deleteAt':
+            _deleteAt = picked;
+            break;
+        }
+      });
+    }
+  }
+
+  void _clearDate(String fieldName) {
+    setState(() {
+      switch (fieldName) {
+        case 'showAt':
+          _showAt = null;
+          break;
+        case 'unShowAt':
+          _unShowAt = null;
+          break;
+        case 'auctionStartAt':
+          _auctionStartAt = null;
+          break;
+        case 'auctionEndAt':
+          _auctionEndAt = null;
+          break;
+        case 'deleteAt':
+          _deleteAt = null;
+          break;
+      }
     });
   }
 
@@ -269,7 +321,11 @@ class _EditCarScreenState extends State<EditCarScreen> {
             ? _vinController.text.trim()
             : null,
         status: _status,
-        condition: _condition,
+        showAt: _showAt,
+        unShowAt: _unShowAt,
+        auctionStartAt: _auctionStartAt,
+        auctionEndAt: _auctionEndAt,
+        deleteAt: _deleteAt,
         createdAt: widget.car.createdAt,
         updatedAt: DateTime.now(),
       );
@@ -312,6 +368,122 @@ class _EditCarScreenState extends State<EditCarScreen> {
         });
       }
     }
+  }
+
+  Widget _buildSectionHeader(String title, IconData icon) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Colors.white.withOpacity(0.1),
+            Colors.white.withOpacity(0.05),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: Colors.white.withOpacity(0.2),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            icon,
+            color: Colors.white,
+            size: 24,
+          ),
+          const SizedBox(width: 12),
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+              fontFamily: 'Tajawal',
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDateField(
+      String label, DateTime? selectedDate, String fieldName, String hint) {
+    return Card(
+      elevation: 2,
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey,
+              ),
+            ),
+            const SizedBox(height: 6),
+            InkWell(
+              onTap: () => _selectDate(context, fieldName),
+              child: Container(
+                width: double.infinity,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey.shade300),
+                  borderRadius: BorderRadius.circular(8),
+                  color: Colors.grey.shade50,
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.calendar_today,
+                      color: Colors.grey.shade600,
+                      size: 18,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        selectedDate != null
+                            ? '${selectedDate.day}/${selectedDate.month}/${selectedDate.year}'
+                            : hint,
+                        style: TextStyle(
+                          color: selectedDate != null
+                              ? Colors.black87
+                              : Colors.grey.shade500,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
+                    if (selectedDate != null)
+                      GestureDetector(
+                        onTap: () => _clearDate(fieldName),
+                        child: Container(
+                          padding: const EdgeInsets.all(2),
+                          decoration: BoxDecoration(
+                            color: Colors.red.shade100,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            Icons.clear,
+                            color: Colors.red.shade600,
+                            size: 16,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -603,18 +775,11 @@ class _EditCarScreenState extends State<EditCarScreen> {
                       const SizedBox(height: 24),
 
                       // Basic Information Section
-                      const Text(
-                        'Basic Information',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                          fontFamily: 'Tajawal',
-                        ),
-                      ),
+                      _buildSectionHeader(
+                          'Basic Information', Icons.info_outline),
                       const SizedBox(height: 16),
 
-                      // Description
+                      // Description - Full width
                       TextFormField(
                         controller: _descriptionController,
                         decoration: const InputDecoration(
@@ -628,58 +793,56 @@ class _EditCarScreenState extends State<EditCarScreen> {
 
                       const SizedBox(height: 16),
 
-                      // Price
-                      TextFormField(
-                        controller: _priceController,
-                        decoration: const InputDecoration(
-                          labelText: 'Price *',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.attach_money),
-                          hintText: 'e.g., 50000',
-                        ),
-                        keyboardType: TextInputType.number,
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return 'Please enter price';
-                          }
-                          if (double.tryParse(value.trim()) == null) {
-                            return 'Please enter a valid price';
-                          }
-                          return null;
-                        },
-                      ),
-
-                      const SizedBox(height: 16),
-
-                      // Contact
-                      TextFormField(
-                        controller: _contactController,
-                        decoration: const InputDecoration(
-                          labelText: 'Contact Info *',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.contact_phone),
-                          hintText: 'Phone, WhatsApp, or Email',
-                        ),
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return 'Please enter contact information';
-                          }
-                          return null;
-                        },
+                      // Price and Contact in a row
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextFormField(
+                              controller: _priceController,
+                              decoration: const InputDecoration(
+                                labelText: 'Price *',
+                                border: OutlineInputBorder(),
+                                prefixIcon: Icon(Icons.attach_money),
+                                hintText: 'e.g., 50000',
+                              ),
+                              keyboardType: TextInputType.number,
+                              validator: (value) {
+                                if (value == null || value.trim().isEmpty) {
+                                  return 'Please enter price';
+                                }
+                                if (double.tryParse(value.trim()) == null) {
+                                  return 'Please enter a valid price';
+                                }
+                                return null;
+                              },
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: TextFormField(
+                              controller: _contactController,
+                              decoration: const InputDecoration(
+                                labelText: 'Contact Info *',
+                                border: OutlineInputBorder(),
+                                prefixIcon: Icon(Icons.contact_phone),
+                                hintText: 'Phone, WhatsApp, or Email',
+                              ),
+                              validator: (value) {
+                                if (value == null || value.trim().isEmpty) {
+                                  return 'Please enter contact information';
+                                }
+                                return null;
+                              },
+                            ),
+                          ),
+                        ],
                       ),
 
                       const SizedBox(height: 24),
 
                       // Car Specifications Section
-                      const Text(
-                        'Car Specifications',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                          fontFamily: 'Tajawal',
-                        ),
-                      ),
+                      _buildSectionHeader(
+                          'Car Specifications', Icons.directions_car),
                       const SizedBox(height: 16),
 
                       // Brand and Model Row
@@ -888,32 +1051,31 @@ class _EditCarScreenState extends State<EditCarScreen> {
 
                       const SizedBox(height: 16),
 
-                      // Drive Type Row
-                      DropdownButtonFormField<String>(
-                        value: _selectedDriveType,
-                        decoration: const InputDecoration(
-                          labelText: 'Drive Type *',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.all_inclusive),
-                        ),
-                        items: ['FWD', 'RWD', 'AWD'].map((String value) {
-                          return DropdownMenuItem<String>(
-                            value: value,
-                            child: Text(value),
-                          );
-                        }).toList(),
-                        onChanged: (String? newValue) {
-                          setState(() {
-                            _selectedDriveType = newValue!;
-                          });
-                        },
-                      ),
-
-                      const SizedBox(height: 16),
-
-                      // Colors Row
+                      // Drive Type and Colors Row
                       Row(
                         children: [
+                          Expanded(
+                            child: DropdownButtonFormField<String>(
+                              value: _selectedDriveType,
+                              decoration: const InputDecoration(
+                                labelText: 'Drive Type *',
+                                border: OutlineInputBorder(),
+                                prefixIcon: Icon(Icons.all_inclusive),
+                              ),
+                              items: ['FWD', 'RWD', 'AWD'].map((String value) {
+                                return DropdownMenuItem<String>(
+                                  value: value,
+                                  child: Text(value),
+                                );
+                              }).toList(),
+                              onChanged: (String? newValue) {
+                                setState(() {
+                                  _selectedDriveType = newValue!;
+                                });
+                              },
+                            ),
+                          ),
+                          const SizedBox(width: 16),
                           Expanded(
                             child: TextFormField(
                               controller: _exteriorColorController,
@@ -931,7 +1093,14 @@ class _EditCarScreenState extends State<EditCarScreen> {
                               },
                             ),
                           ),
-                          const SizedBox(width: 16),
+                        ],
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      // Interior Color, Doors and Seats Row
+                      Row(
+                        children: [
                           Expanded(
                             child: TextFormField(
                               controller: _interiorColorController,
@@ -949,19 +1118,12 @@ class _EditCarScreenState extends State<EditCarScreen> {
                               },
                             ),
                           ),
-                        ],
-                      ),
-
-                      const SizedBox(height: 16),
-
-                      // Doors and Seats Row
-                      Row(
-                        children: [
+                          const SizedBox(width: 16),
                           Expanded(
                             child: TextFormField(
                               controller: _doorsController,
                               decoration: const InputDecoration(
-                                labelText: 'Number of Doors *',
+                                labelText: 'Doors *',
                                 border: OutlineInputBorder(),
                                 prefixIcon: Icon(Icons.door_front_door),
                                 hintText: 'e.g., 4',
@@ -983,7 +1145,7 @@ class _EditCarScreenState extends State<EditCarScreen> {
                             child: TextFormField(
                               controller: _seatsController,
                               decoration: const InputDecoration(
-                                labelText: 'Number of Seats *',
+                                labelText: 'Seats *',
                                 border: OutlineInputBorder(),
                                 prefixIcon:
                                     Icon(Icons.airline_seat_recline_normal),
@@ -1027,105 +1189,165 @@ class _EditCarScreenState extends State<EditCarScreen> {
 
                       const SizedBox(height: 24),
 
-                      // Status and Condition Row
+                      // Timestamp Fields Section
+                      _buildSectionHeader(
+                        _status == 3
+                            ? 'Auction & Timing Settings'
+                            : 'Timing Settings',
+                        _status == 3 ? Icons.gavel : Icons.schedule,
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Show/Un-Show Dates Row
                       Row(
                         children: [
-                          // Status Switch
                           Expanded(
-                            child: Card(
-                              child: Padding(
-                                padding: const EdgeInsets.all(16),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const Text(
-                                      'Availability Status',
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Row(
-                                      children: [
-                                        Switch(
-                                          value: _status,
-                                          onChanged: (value) {
-                                            setState(() {
-                                              _status = value;
-                                            });
-                                          },
-                                          activeColor: Colors.green,
-                                        ),
-                                        const SizedBox(width: 8),
-                                        Text(
-                                          _status
-                                              ? 'Available'
-                                              : 'Not Available',
-                                          style: TextStyle(
-                                            color: _status
-                                                ? Colors.green
-                                                : Colors.red,
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ),
+                            child: _buildDateField(
+                              'Show At',
+                              _showAt,
+                              'showAt',
+                              'When to show',
                             ),
                           ),
                           const SizedBox(width: 16),
-                          // Condition Switch
                           Expanded(
-                            child: Card(
-                              child: Padding(
-                                padding: const EdgeInsets.all(16),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const Text(
-                                      'Car Condition',
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Row(
-                                      children: [
-                                        Switch(
-                                          value: _condition,
-                                          onChanged: (value) {
-                                            setState(() {
-                                              _condition = value;
-                                              if (value) {
-                                                // If new, set mileage to 0
-                                                _mileageController.text = '0';
-                                              }
-                                            });
-                                          },
-                                          activeColor: Colors.blue,
-                                        ),
-                                        const SizedBox(width: 8),
-                                        Text(
-                                          _condition ? 'New' : 'Used',
-                                          style: TextStyle(
-                                            color: _condition
-                                                ? Colors.blue
-                                                : Colors.orange,
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ),
+                            child: _buildDateField(
+                              'Un-Show At',
+                              _unShowAt,
+                              'unShowAt',
+                              'When to hide',
                             ),
                           ),
                         ],
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      // Auction Start Date - Only show if status is Auction (3)
+                      if (_status == 3) ...[
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          margin: const EdgeInsets.only(bottom: 16),
+                          decoration: BoxDecoration(
+                            color: Colors.blue.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(8),
+                            border:
+                                Border.all(color: Colors.blue.withOpacity(0.3)),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.gavel,
+                                color: Colors.blue.shade700,
+                                size: 20,
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  'Auction mode selected - set auction start and end times',
+                                  style: TextStyle(
+                                    color: Colors.blue.shade700,
+                                    fontWeight: FontWeight.w500,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _buildDateField(
+                                'Auction Start At',
+                                _auctionStartAt,
+                                'auctionStartAt',
+                                'When auction starts',
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: _buildDateField(
+                                'Auction End At',
+                                _auctionEndAt,
+                                'auctionEndAt',
+                                'When auction ends',
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                      ],
+
+                      // Delete At Date
+                      _buildDateField(
+                        'Delete At',
+                        _deleteAt,
+                        'deleteAt',
+                        'When to automatically delete this listing',
+                      ),
+
+                      const SizedBox(height: 24),
+
+                      // Status Section
+                      _buildSectionHeader('Availability Status', Icons.flag),
+                      const SizedBox(height: 16),
+
+                      Card(
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.flag,
+                                color: Colors.grey.shade600,
+                                size: 20,
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: DropdownButtonFormField<int>(
+                                  value: _status,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Status',
+                                    border: OutlineInputBorder(),
+                                    contentPadding: EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 8,
+                                    ),
+                                  ),
+                                  items: const [
+                                    DropdownMenuItem(
+                                      value: 1,
+                                      child: Text('Available'),
+                                    ),
+                                    DropdownMenuItem(
+                                      value: 2,
+                                      child: Text('Unavailable'),
+                                    ),
+                                    DropdownMenuItem(
+                                      value: 3,
+                                      child: Text('Auction'),
+                                    ),
+                                    DropdownMenuItem(
+                                      value: 4,
+                                      child: Text('Sold'),
+                                    ),
+                                  ],
+                                  onChanged: (value) {
+                                    setState(() {
+                                      _status = value!;
+                                      // Clear auction dates if status is not Auction
+                                      if (value != 3) {
+                                        _auctionStartAt = null;
+                                        _auctionEndAt = null;
+                                      }
+                                    });
+                                  },
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
 
                       const SizedBox(height: 32),

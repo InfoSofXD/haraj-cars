@@ -82,6 +82,11 @@ class SupabaseService {
         'seats': car.seats,
         'contact': car.contact,
         'vin': car.vin,
+        'show_at': car.showAt?.toIso8601String(),
+        'un_show_at': car.unShowAt?.toIso8601String(),
+        'auction_start_at': car.auctionStartAt?.toIso8601String(),
+        'auction_end_at': car.auctionEndAt?.toIso8601String(),
+        'delete_at': car.deleteAt?.toIso8601String(),
       };
 
       // Only include image if it exists
@@ -128,7 +133,11 @@ class SupabaseService {
         'contact': car.contact,
         'vin': car.vin,
         'status': car.status,
-        'condition': car.condition,
+        'show_at': car.showAt?.toIso8601String(),
+        'un_show_at': car.unShowAt?.toIso8601String(),
+        'auction_start_at': car.auctionStartAt?.toIso8601String(),
+        'auction_end_at': car.auctionEndAt?.toIso8601String(),
+        'delete_at': car.deleteAt?.toIso8601String(),
         'updated_at': car.updatedAt.toIso8601String(),
       };
 
@@ -152,7 +161,7 @@ class SupabaseService {
   }
 
   // Update car status only
-  Future<bool> updateCarStatus(String carId, bool status) async {
+  Future<bool> updateCarStatus(String carId, int status) async {
     try {
       await _supabase.from('cars').update({
         'status': status,

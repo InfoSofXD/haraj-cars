@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'dart:ui';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/car.dart';
+import '../../tools/theme_controller.dart';
+import '../../tools/Palette/theme.dart' as custom_theme;
 import '../../supabase/supabase_service.dart';
-import '../widgets/admin_login_dialog.dart';
-import '../widgets/status_update_dialog.dart';
+import '../tools/dialogs/dialogs.dart';
+import '../widgets/tab_manger_widgets.dart';
 import '../screens/add_car_screen.dart';
 import '../screens/edit_car_screen.dart';
 import '../screens/car_scraper.dart';
@@ -197,26 +199,7 @@ class _TabMangerScreenState extends State<TabMangerScreen>
   void _showAddCarDialog() {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Add New Car'),
-        content: const Text('How would you like to add a new car?'),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              _showManualAddCar();
-            },
-            child: const Text('Add Manually'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              _showScrapeCarDialog();
-            },
-            child: const Text('Scrape Car Data'),
-          ),
-        ],
-      ),
+      builder: (context) => const AddCarDialog(),
     );
   }
 
@@ -324,8 +307,7 @@ class _TabMangerScreenState extends State<TabMangerScreen>
         mainImage: null, // Will be handled separately for images
         otherImages: null,
         contact: dealer.isNotEmpty ? dealer : 'Contact seller',
-        status: true, // Default to available
-        condition: false, // Default to used
+        status: 1, // Default to available
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
       );
@@ -401,25 +383,7 @@ class _TabMangerScreenState extends State<TabMangerScreen>
   }
 
   Future<void> _deleteCar(Car car) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete Car'),
-        content:
-            Text('Are you sure you want to delete "${car.computedTitle}"?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
-    );
+    final confirmed = await DeleteCarDialog.show(context, car);
 
     if (confirmed == true) {
       try {
@@ -449,16 +413,19 @@ class _TabMangerScreenState extends State<TabMangerScreen>
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              Color(0xFF1565C0),
-              Color(0xFF1976D2),
-              Color(0xFF1E88E5),
+              colorScheme.primary,
+              colorScheme.primaryContainer,
+              colorScheme.secondary,
             ],
           ),
         ),
@@ -508,7 +475,19 @@ class _TabMangerScreenState extends State<TabMangerScreen>
                 bottom: 0,
                 left: 0,
                 right: 0,
-                child: _buildBottomNavigationBar(),
+                child: TabManagerWidgets.buildBottomNavigationBar(
+                  context,
+                  currentIndex: _currentIndex,
+                  isAdmin: _isAdmin,
+                  onTabTapped: (index) {
+                    _pageController.animateToPage(
+                      index,
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeInOut,
+                    );
+                  },
+                  onAddCar: _showAddCarDialog,
+                ),
               ),
             ],
           ),
@@ -517,21 +496,76 @@ class _TabMangerScreenState extends State<TabMangerScreen>
     );
   }
 
+  void _updateTheme(bool? themeMode) {
+    String themeText;
+    if (themeMode == null) {
+      themeText = 'System';
+    } else if (themeMode == true) {
+      themeText = 'Dark';
+    } else {
+      themeText = 'Light';
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Theme changed to: $themeText'),
+        backgroundColor: Colors.green,
+      ),
+    );
+  }
+
+  void _updateLanguage(String language) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Language changed to: $language'),
+        backgroundColor: Colors.green,
+      ),
+    );
+  }
+
+  void _updateMeasurementUnits(bool useMetric) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+            'Measurement units changed to: ${useMetric ? 'Kilometers' : 'Miles'}'),
+        backgroundColor: Colors.green,
+      ),
+    );
+  }
+
+  void _updateCurrency(bool useSAR) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Currency changed to: ${useSAR ? 'SAR' : 'USD'}'),
+        backgroundColor: Colors.green,
+      ),
+    );
+  }
+
+  void _updateNotifications(bool enabled) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Notifications ${enabled ? 'enabled' : 'disabled'}'),
+        backgroundColor: Colors.green,
+      ),
+    );
+  }
+
   Widget _buildTopNavigationBar() {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Container(
       height: 60,
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Colors.white.withOpacity(0.1),
-            Colors.white.withOpacity(0.05),
-          ],
-        ),
+        color: theme.brightness == Brightness.dark
+            ? Colors.grey[700]
+            : colorScheme.surfaceVariant,
         border: Border(
           bottom: BorderSide(
-            color: Colors.white.withOpacity(0.1),
+            color: theme.brightness == Brightness.dark
+                ? Colors.white.withOpacity(0.1)
+                : colorScheme.outline,
             width: 1,
           ),
         ),
@@ -541,10 +575,12 @@ class _TabMangerScreenState extends State<TabMangerScreen>
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text(
-              'HARAJ . USA',
+            Text(
+              'HARAJ . OHIO',
               style: TextStyle(
-                color: Colors.white,
+                color: theme.brightness == Brightness.dark
+                    ? Colors.white
+                    : colorScheme.onSurface,
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
                 fontFamily: 'Tajawal',
@@ -559,12 +595,14 @@ class _TabMangerScreenState extends State<TabMangerScreen>
                   child: Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.1),
+                      color: colorScheme.onPrimary.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.admin_panel_settings,
-                      color: Colors.white,
+                      color: theme.brightness == Brightness.dark
+                          ? Colors.white
+                          : colorScheme.onSurface,
                       size: 18,
                     ),
                   ),
@@ -581,6 +619,9 @@ class _TabMangerScreenState extends State<TabMangerScreen>
   }
 
   Widget _buildThreeDotsMenu() {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return ClipRRect(
       borderRadius: BorderRadius.circular(12),
       child: BackdropFilter(
@@ -589,10 +630,10 @@ class _TabMangerScreenState extends State<TabMangerScreen>
           height: 45,
           width: 45,
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.1),
+            color: colorScheme.onPrimary.withOpacity(0.1),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: Colors.white.withOpacity(0.2),
+              color: colorScheme.onPrimary.withOpacity(0.2),
               width: 1,
             ),
           ),
@@ -603,10 +644,13 @@ class _TabMangerScreenState extends State<TabMangerScreen>
   }
 
   Widget _buildSettingsPopupMenu() {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return PopupMenuButton<String>(
       icon: Icon(
         Icons.more_vert,
-        color: Colors.white.withOpacity(0.9),
+        color: colorScheme.onPrimary.withOpacity(0.9),
       ),
       tooltip: '',
       color: Colors.transparent,
@@ -642,7 +686,9 @@ class _TabMangerScreenState extends State<TabMangerScreen>
               child: Container(
                 width: 270,
                 decoration: BoxDecoration(
-                  color: Colors.grey[600]!.withOpacity(0.2),
+                  color: theme.brightness == Brightness.dark
+                      ? Colors.grey[700]!.withOpacity(0.3)
+                      : custom_theme.light.shade100.withOpacity(0.3),
                   borderRadius: const BorderRadius.only(
                     topLeft: Radius.circular(24),
                     topRight: Radius.circular(5),
@@ -650,7 +696,8 @@ class _TabMangerScreenState extends State<TabMangerScreen>
                     bottomRight: Radius.circular(24),
                   ),
                   border: Border.all(
-                    color: Colors.white.withOpacity(0.5),
+                    color: Colors.white,
+                    width: 1,
                   ),
                 ),
                 child: Column(
@@ -659,71 +706,119 @@ class _TabMangerScreenState extends State<TabMangerScreen>
                     // Theme Option
                     Container(
                       margin: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.grey.withOpacity(0.1),
+                      child: ClipRRect(
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: Colors.white.withOpacity(0.2),
+                        child: BackdropFilter(
+                          filter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: theme.brightness == Brightness.dark
+                                  ? Colors.grey[700]!.withOpacity(0.3)
+                                  : custom_theme.light.shade100
+                                      .withOpacity(0.3),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: Colors.white,
+                                width: 1,
+                              ),
+                            ),
+                            child: StatefulBuilder(
+                              builder: (context, setInnerState) {
+                                return _buildThemeOption(setInnerState);
+                              },
+                            ),
+                          ),
                         ),
-                      ),
-                      child: StatefulBuilder(
-                        builder: (context, setInnerState) {
-                          return _buildThemeOption(setInnerState);
-                        },
                       ),
                     ),
                     // Divider
                     Container(
                       margin: const EdgeInsets.symmetric(horizontal: 8),
                       height: 1,
-                      color: Colors.white.withOpacity(0.1),
+                      color: colorScheme.outline.withOpacity(0.2),
                     ),
                     // Language Option
                     Container(
                       margin: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.grey.withOpacity(0.1),
+                      child: ClipRRect(
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: Colors.white.withOpacity(0.2),
+                        child: BackdropFilter(
+                          filter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: theme.brightness == Brightness.dark
+                                  ? Colors.grey[700]!.withOpacity(0.3)
+                                  : custom_theme.light.shade100
+                                      .withOpacity(0.3),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: Colors.white,
+                                width: 1,
+                              ),
+                            ),
+                            child: StatefulBuilder(
+                              builder: (context, setInnerState) {
+                                return _buildLanguageOption(setInnerState);
+                              },
+                            ),
+                          ),
                         ),
-                      ),
-                      child: StatefulBuilder(
-                        builder: (context, setInnerState) {
-                          return _buildLanguageOption(setInnerState);
-                        },
                       ),
                     ),
                     // Unit of Measurement Option
                     Container(
                       margin: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.grey.withOpacity(0.1),
+                      child: ClipRRect(
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: Colors.white.withOpacity(0.2),
+                        child: BackdropFilter(
+                          filter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: theme.brightness == Brightness.dark
+                                  ? Colors.grey[700]!.withOpacity(0.3)
+                                  : custom_theme.light.shade100
+                                      .withOpacity(0.3),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: Colors.white,
+                                width: 1,
+                              ),
+                            ),
+                            child: StatefulBuilder(
+                              builder: (context, setInnerState) {
+                                return _buildMeasurementOption(setInnerState);
+                              },
+                            ),
+                          ),
                         ),
-                      ),
-                      child: StatefulBuilder(
-                        builder: (context, setInnerState) {
-                          return _buildMeasurementOption(setInnerState);
-                        },
                       ),
                     ),
                     // Currency Option
                     Container(
                       margin: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.grey.withOpacity(0.1),
+                      child: ClipRRect(
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: Colors.white.withOpacity(0.2),
+                        child: BackdropFilter(
+                          filter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: theme.brightness == Brightness.dark
+                                  ? Colors.grey[700]!.withOpacity(0.3)
+                                  : custom_theme.light.shade100
+                                      .withOpacity(0.3),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: Colors.white,
+                                width: 1,
+                              ),
+                            ),
+                            child: StatefulBuilder(
+                              builder: (context, setInnerState) {
+                                return _buildCurrencyOption(setInnerState);
+                              },
+                            ),
+                          ),
                         ),
-                      ),
-                      child: StatefulBuilder(
-                        builder: (context, setInnerState) {
-                          return _buildCurrencyOption(setInnerState);
-                        },
                       ),
                     ),
                     // Notification Option
@@ -817,52 +912,40 @@ class _TabMangerScreenState extends State<TabMangerScreen>
           sizeFactor: _themeMenuAnimation,
           child: FadeTransition(
             opacity: _themeMenuAnimation,
-            child: Container(
-              margin: const EdgeInsets.only(
-                left: 8,
-                right: 8,
-                bottom: 8,
-              ),
-              decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
+            child: Column(
+              children: [
+                _buildThemeOptionItem(
+                  theme: 'System',
+                  code: 'SYS',
+                  icon: Icons.settings,
+                  isSelected: themeMode == null,
+                  setInnerState: setInnerState,
+                ),
+                Container(
+                  height: 1,
+                  margin: const EdgeInsets.symmetric(horizontal: 16),
                   color: Colors.white.withOpacity(0.1),
                 ),
-              ),
-              child: Column(
-                children: [
-                  _buildThemeOptionItem(
-                    theme: 'System',
-                    code: 'SYS',
-                    icon: Icons.settings,
-                    isSelected: themeMode == null,
-                    setInnerState: setInnerState,
-                  ),
-                  Container(
-                    height: 1,
-                    color: Colors.white.withOpacity(0.1),
-                  ),
-                  _buildThemeOptionItem(
-                    theme: 'Light',
-                    code: 'LIGHT',
-                    icon: Icons.light_mode,
-                    isSelected: themeMode == false,
-                    setInnerState: setInnerState,
-                  ),
-                  Container(
-                    height: 1,
-                    color: Colors.white.withOpacity(0.1),
-                  ),
-                  _buildThemeOptionItem(
-                    theme: 'Dark',
-                    code: 'DARK',
-                    icon: Icons.dark_mode,
-                    isSelected: themeMode == true,
-                    setInnerState: setInnerState,
-                  ),
-                ],
-              ),
+                _buildThemeOptionItem(
+                  theme: 'Light',
+                  code: 'LIGHT',
+                  icon: Icons.light_mode,
+                  isSelected: themeMode == false,
+                  setInnerState: setInnerState,
+                ),
+                Container(
+                  height: 1,
+                  margin: const EdgeInsets.symmetric(horizontal: 16),
+                  color: Colors.white.withOpacity(0.1),
+                ),
+                _buildThemeOptionItem(
+                  theme: 'Dark',
+                  code: 'DARK',
+                  icon: Icons.dark_mode,
+                  isSelected: themeMode == true,
+                  setInnerState: setInnerState,
+                ),
+              ],
             ),
           ),
         ),
@@ -935,43 +1018,92 @@ class _TabMangerScreenState extends State<TabMangerScreen>
           sizeFactor: _menuAnimation,
           child: FadeTransition(
             opacity: _menuAnimation,
-            child: Container(
-              margin: const EdgeInsets.only(
-                left: 8,
-                right: 8,
-                bottom: 8,
-              ),
-              decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
+            child: Column(
+              children: [
+                _buildLanguageOptionItem(
+                  language: 'English',
+                  code: 'EN',
+                  isSelected: selectedLanguageA == 'English',
+                  setInnerState: setInnerState,
+                ),
+                Container(
+                  height: 1,
+                  margin: const EdgeInsets.symmetric(horizontal: 16),
                   color: Colors.white.withOpacity(0.1),
                 ),
-              ),
-              child: Column(
-                children: [
-                  _buildLanguageOptionItem(
-                    language: 'English',
-                    code: 'EN',
-                    isSelected: selectedLanguageA == 'English',
-                    setInnerState: setInnerState,
-                  ),
-                  Container(
-                    height: 1,
-                    color: Colors.white.withOpacity(0.1),
-                  ),
-                  _buildLanguageOptionItem(
-                    language: 'العربيه',
-                    code: 'AR',
-                    isSelected: selectedLanguageA == 'العربيه',
-                    setInnerState: setInnerState,
-                  ),
-                ],
-              ),
+                _buildLanguageOptionItem(
+                  language: 'العربيه',
+                  code: 'AR',
+                  isSelected: selectedLanguageA == 'العربيه',
+                  setInnerState: setInnerState,
+                ),
+              ],
             ),
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildOptionItem({
+    required String title,
+    required bool isSelected,
+    required VoidCallback onTap,
+    IconData? icon,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color:
+              isSelected ? Colors.white.withOpacity(0.2) : Colors.transparent,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: isSelected
+                ? Colors.white.withOpacity(0.6)
+                : Colors.white.withOpacity(0.1),
+            width: isSelected ? 1.5 : 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            if (icon != null) ...[
+              Icon(
+                icon,
+                color:
+                    isSelected ? Colors.white : Colors.white.withOpacity(0.7),
+                size: 20,
+              ),
+              const SizedBox(width: 12),
+            ],
+            Text(
+              title,
+              style: TextStyle(
+                color:
+                    isSelected ? Colors.white : Colors.white.withOpacity(0.7),
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                fontSize: 15,
+              ),
+            ),
+            const Spacer(),
+            if (isSelected)
+              Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.check,
+                  color: Colors.white,
+                  size: 16,
+                ),
+              ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -982,7 +1114,10 @@ class _TabMangerScreenState extends State<TabMangerScreen>
     required bool isSelected,
     required StateSetter setInnerState,
   }) {
-    return InkWell(
+    return _buildOptionItem(
+      title: theme,
+      isSelected: isSelected,
+      icon: icon,
       onTap: () {
         setInnerState(() {
           if (theme == 'System') {
@@ -994,35 +1129,10 @@ class _TabMangerScreenState extends State<TabMangerScreen>
           }
           _saveSettings();
         });
+        // Apply app-wide theme via controller
+        ThemeController.instance.setThemeBool(themeMode);
         _updateTheme(themeMode);
       },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        child: Row(
-          children: [
-            Icon(
-              icon,
-              color: isSelected ? Colors.blue : Colors.white,
-              size: 20,
-            ),
-            const SizedBox(width: 12),
-            Text(
-              theme,
-              style: TextStyle(
-                color: isSelected ? Colors.blue : Colors.white,
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-              ),
-            ),
-            const Spacer(),
-            if (isSelected)
-              const Icon(
-                Icons.check,
-                color: Colors.blue,
-                size: 20,
-              ),
-          ],
-        ),
-      ),
     );
   }
 
@@ -1032,7 +1142,9 @@ class _TabMangerScreenState extends State<TabMangerScreen>
     required bool isSelected,
     required StateSetter setInnerState,
   }) {
-    return InkWell(
+    return _buildOptionItem(
+      title: language,
+      isSelected: isSelected,
       onTap: () {
         setInnerState(() {
           selectedLanguageA = language;
@@ -1040,27 +1152,6 @@ class _TabMangerScreenState extends State<TabMangerScreen>
         });
         _updateLanguage(language);
       },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        child: Row(
-          children: [
-            Text(
-              language,
-              style: TextStyle(
-                color: isSelected ? Colors.blue : Colors.white,
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-              ),
-            ),
-            const Spacer(),
-            if (isSelected)
-              const Icon(
-                Icons.check,
-                color: Colors.blue,
-                size: 20,
-              ),
-          ],
-        ),
-      ),
     );
   }
 
@@ -1129,41 +1220,28 @@ class _TabMangerScreenState extends State<TabMangerScreen>
           sizeFactor: _measurementMenuAnimation,
           child: FadeTransition(
             opacity: _measurementMenuAnimation,
-            child: Container(
-              margin: const EdgeInsets.only(
-                left: 8,
-                right: 8,
-                bottom: 8,
-              ),
-              decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
+            child: Column(
+              children: [
+                _buildMeasurementOptionItem(
+                  unit: 'Kilometers',
+                  code: 'KM',
+                  icon: Icons.straighten,
+                  isSelected: useMetricUnits,
+                  setInnerState: setInnerState,
+                ),
+                Container(
+                  height: 1,
+                  margin: const EdgeInsets.symmetric(horizontal: 16),
                   color: Colors.white.withOpacity(0.1),
                 ),
-              ),
-              child: Column(
-                children: [
-                  _buildMeasurementOptionItem(
-                    unit: 'Kilometers',
-                    code: 'KM',
-                    icon: Icons.straighten,
-                    isSelected: useMetricUnits,
-                    setInnerState: setInnerState,
-                  ),
-                  Container(
-                    height: 1,
-                    color: Colors.white.withOpacity(0.1),
-                  ),
-                  _buildMeasurementOptionItem(
-                    unit: 'Miles',
-                    code: 'MI',
-                    icon: Icons.straighten_outlined,
-                    isSelected: !useMetricUnits,
-                    setInnerState: setInnerState,
-                  ),
-                ],
-              ),
+                _buildMeasurementOptionItem(
+                  unit: 'Miles',
+                  code: 'MI',
+                  icon: Icons.straighten_outlined,
+                  isSelected: !useMetricUnits,
+                  setInnerState: setInnerState,
+                ),
+              ],
             ),
           ),
         ),
@@ -1178,7 +1256,10 @@ class _TabMangerScreenState extends State<TabMangerScreen>
     required bool isSelected,
     required StateSetter setInnerState,
   }) {
-    return InkWell(
+    return _buildOptionItem(
+      title: unit,
+      isSelected: isSelected,
+      icon: icon,
       onTap: () {
         setInnerState(() {
           useMetricUnits = (unit == 'Kilometers');
@@ -1186,33 +1267,6 @@ class _TabMangerScreenState extends State<TabMangerScreen>
         });
         _updateMeasurementUnits(useMetricUnits);
       },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        child: Row(
-          children: [
-            Icon(
-              icon,
-              color: isSelected ? Colors.blue : Colors.white,
-              size: 20,
-            ),
-            const SizedBox(width: 12),
-            Text(
-              unit,
-              style: TextStyle(
-                color: isSelected ? Colors.blue : Colors.white,
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-              ),
-            ),
-            const Spacer(),
-            if (isSelected)
-              const Icon(
-                Icons.check,
-                color: Colors.blue,
-                size: 20,
-              ),
-          ],
-        ),
-      ),
     );
   }
 
@@ -1281,41 +1335,28 @@ class _TabMangerScreenState extends State<TabMangerScreen>
           sizeFactor: _currencyMenuAnimation,
           child: FadeTransition(
             opacity: _currencyMenuAnimation,
-            child: Container(
-              margin: const EdgeInsets.only(
-                left: 8,
-                right: 8,
-                bottom: 8,
-              ),
-              decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
+            child: Column(
+              children: [
+                _buildCurrencyOptionItem(
+                  currency: 'Saudi Riyal',
+                  code: 'SAR',
+                  icon: Icons.attach_money,
+                  isSelected: useSARCurrency,
+                  setInnerState: setInnerState,
+                ),
+                Container(
+                  height: 1,
+                  margin: const EdgeInsets.symmetric(horizontal: 16),
                   color: Colors.white.withOpacity(0.1),
                 ),
-              ),
-              child: Column(
-                children: [
-                  _buildCurrencyOptionItem(
-                    currency: 'Saudi Riyal',
-                    code: 'SAR',
-                    icon: Icons.attach_money,
-                    isSelected: useSARCurrency,
-                    setInnerState: setInnerState,
-                  ),
-                  Container(
-                    height: 1,
-                    color: Colors.white.withOpacity(0.1),
-                  ),
-                  _buildCurrencyOptionItem(
-                    currency: 'US Dollar',
-                    code: 'USD',
-                    icon: Icons.attach_money_outlined,
-                    isSelected: !useSARCurrency,
-                    setInnerState: setInnerState,
-                  ),
-                ],
-              ),
+                _buildCurrencyOptionItem(
+                  currency: 'US Dollar',
+                  code: 'USD',
+                  icon: Icons.attach_money_outlined,
+                  isSelected: !useSARCurrency,
+                  setInnerState: setInnerState,
+                ),
+              ],
             ),
           ),
         ),
@@ -1330,7 +1371,10 @@ class _TabMangerScreenState extends State<TabMangerScreen>
     required bool isSelected,
     required StateSetter setInnerState,
   }) {
-    return InkWell(
+    return _buildOptionItem(
+      title: currency,
+      isSelected: isSelected,
+      icon: icon,
       onTap: () {
         setInnerState(() {
           useSARCurrency = (currency == 'Saudi Riyal');
@@ -1338,37 +1382,12 @@ class _TabMangerScreenState extends State<TabMangerScreen>
         });
         _updateCurrency(useSARCurrency);
       },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        child: Row(
-          children: [
-            Icon(
-              icon,
-              color: isSelected ? Colors.blue : Colors.white,
-              size: 20,
-            ),
-            const SizedBox(width: 12),
-            Text(
-              currency,
-              style: TextStyle(
-                color: isSelected ? Colors.blue : Colors.white,
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-              ),
-            ),
-            const Spacer(),
-            if (isSelected)
-              const Icon(
-                Icons.check,
-                color: Colors.blue,
-                size: 20,
-              ),
-          ],
-        ),
-      ),
     );
   }
 
   Widget _buildNotificationOption(StateSetter setInnerState) {
+    final theme = Theme.of(context);
+
     return InkWell(
       onTap: () {
         setInnerState(() {
@@ -1379,41 +1398,52 @@ class _TabMangerScreenState extends State<TabMangerScreen>
       },
       child: Container(
         margin: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.1),
+        child: ClipRRect(
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: Colors.white.withOpacity(0.2),
-          ),
-        ),
-        child: ListTile(
-          leading: Icon(
-            notificationsEnabled
-                ? Icons.notifications
-                : Icons.notifications_off,
-            color: Colors.white,
-          ),
-          title: Text(
-            notificationsEnabled ? 'Notifications' : 'Notifications',
-            style: const TextStyle(
-              fontFamily: 'Tajawal',
-              color: Colors.white,
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
+            child: Container(
+              decoration: BoxDecoration(
+                color: theme.brightness == Brightness.dark
+                    ? Colors.grey[700]!.withOpacity(0.3)
+                    : custom_theme.light.shade100.withOpacity(0.3),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: Colors.white,
+                  width: 1,
+                ),
+              ),
+              child: ListTile(
+                leading: Icon(
+                  notificationsEnabled
+                      ? Icons.notifications
+                      : Icons.notifications_off,
+                  color: Colors.white,
+                ),
+                title: Text(
+                  notificationsEnabled ? 'Notifications' : 'Notifications',
+                  style: const TextStyle(
+                    fontFamily: 'Tajawal',
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                trailing: Switch(
+                  value: notificationsEnabled,
+                  onChanged: (bool value) {
+                    setInnerState(() {
+                      notificationsEnabled = value;
+                      _saveSettings();
+                    });
+                    _updateNotifications(notificationsEnabled);
+                  },
+                  activeColor: Colors.white,
+                  inactiveTrackColor: Colors.white.withOpacity(0.3),
+                  inactiveThumbColor: Colors.white,
+                ),
+              ),
             ),
-          ),
-          trailing: Switch(
-            value: notificationsEnabled,
-            onChanged: (bool value) {
-              setInnerState(() {
-                notificationsEnabled = value;
-                _saveSettings();
-              });
-              _updateNotifications(notificationsEnabled);
-            },
-            activeColor: Colors.white,
-            inactiveTrackColor: Colors.white.withOpacity(0.3),
-            inactiveThumbColor: Colors.white,
           ),
         ),
       ),
@@ -1421,92 +1451,50 @@ class _TabMangerScreenState extends State<TabMangerScreen>
   }
 
   Widget _buildContactOption() {
+    final theme = Theme.of(context);
+
     return InkWell(
       onTap: _showContactDialog,
       child: Container(
         margin: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.1),
+        child: ClipRRect(
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: Colors.white.withOpacity(0.2),
-          ),
-        ),
-        child: const ListTile(
-          leading: Icon(
-            Icons.contact_support,
-            color: Colors.white,
-          ),
-          title: Text(
-            'Contact Us',
-            style: TextStyle(
-              fontFamily: 'Tajawal',
-              color: Colors.white,
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
+            child: Container(
+              decoration: BoxDecoration(
+                color: theme.brightness == Brightness.dark
+                    ? Colors.grey[700]!.withOpacity(0.3)
+                    : custom_theme.light.shade100.withOpacity(0.3),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: Colors.white,
+                  width: 1,
+                ),
+              ),
+              child: const ListTile(
+                leading: Icon(
+                  Icons.contact_support,
+                  color: Colors.white,
+                ),
+                title: Text(
+                  'Contact Us',
+                  style: TextStyle(
+                    fontFamily: 'Tajawal',
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                trailing: Icon(
+                  Icons.arrow_forward_ios,
+                  color: Colors.white,
+                  size: 16,
+                ),
+              ),
             ),
           ),
-          trailing: Icon(
-            Icons.arrow_forward_ios,
-            color: Colors.white,
-            size: 16,
-          ),
         ),
-      ),
-    );
-  }
-
-  void _updateTheme(bool? themeMode) {
-    String themeText;
-    if (themeMode == null) {
-      themeText = 'System';
-    } else if (themeMode == true) {
-      themeText = 'Dark';
-    } else {
-      themeText = 'Light';
-    }
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Theme changed to: $themeText'),
-        backgroundColor: Colors.green,
-      ),
-    );
-  }
-
-  void _updateLanguage(String language) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Language changed to: $language'),
-        backgroundColor: Colors.green,
-      ),
-    );
-  }
-
-  void _updateMeasurementUnits(bool useMetric) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-            'Measurement units changed to: ${useMetric ? 'Kilometers' : 'Miles'}'),
-        backgroundColor: Colors.green,
-      ),
-    );
-  }
-
-  void _updateCurrency(bool useSAR) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Currency changed to: ${useSAR ? 'SAR' : 'USD'}'),
-        backgroundColor: Colors.green,
-      ),
-    );
-  }
-
-  void _updateNotifications(bool enabled) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Notifications ${enabled ? 'enabled' : 'disabled'}'),
-        backgroundColor: Colors.green,
       ),
     );
   }
@@ -1565,218 +1553,6 @@ class _TabMangerScreenState extends State<TabMangerScreen>
   }
 
   void _showContactDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Contact Us'),
-        content: const Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Get in touch with us:',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 16),
-            Row(
-              children: [
-                Icon(Icons.phone, color: Colors.blue, size: 20),
-                SizedBox(width: 8),
-                Text('+1 (555) 123-4567'),
-              ],
-            ),
-            SizedBox(height: 8),
-            Row(
-              children: [
-                Icon(Icons.email, color: Colors.red, size: 20),
-                SizedBox(width: 8),
-                Text('support@harajcars.com'),
-              ],
-            ),
-            SizedBox(height: 8),
-            Row(
-              children: [
-                Icon(Icons.location_on, color: Colors.green, size: 20),
-                SizedBox(width: 8),
-                Text('123 Main St, New York, NY 10001'),
-              ],
-            ),
-            SizedBox(height: 8),
-            Row(
-              children: [
-                Icon(Icons.access_time, color: Colors.orange, size: 20),
-                SizedBox(width: 8),
-                Text('Mon-Fri: 9AM-6PM EST'),
-              ],
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Close'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildBottomNavigationBar() {
-    return ClipRRect(
-      borderRadius: const BorderRadius.only(
-        topLeft: Radius.circular(64),
-        topRight: Radius.circular(64),
-      ),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
-        child: Container(
-          height: 70,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                const Color(0xFF2196F3).withOpacity(0.3),
-                const Color(0xFF1976D2).withOpacity(0.4),
-                const Color(0xFF1565C0).withOpacity(0.3),
-              ],
-            ),
-            borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(64),
-              topRight: Radius.circular(64),
-            ),
-            border: Border.all(
-              color: const Color(0xFF42A5F5),
-              width: 1,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFF2196F3).withOpacity(0.4),
-                spreadRadius: 0,
-                blurRadius: 20,
-                offset: const Offset(0, 8),
-              ),
-              BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                spreadRadius: 0,
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                // Main navigation tabs
-                Expanded(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      _buildBottomNavItem(
-                          Icons.directions_car, 0, _currentIndex == 0),
-                      _buildBottomNavItem(Icons.public, 1, _currentIndex == 1),
-                      _buildBottomNavItem(
-                          Icons.favorite, 2, _currentIndex == 2),
-                      _buildBottomNavItem(Icons.info, 3, _currentIndex == 3),
-                      _buildBottomNavItem(Icons.person, 4, _currentIndex == 4),
-                    ],
-                  ),
-                ),
-                // Admin add button (only show in cars tab when admin)
-                if (_isAdmin && _currentIndex == 0) ...[
-                  const SizedBox(width: 16),
-                  _buildAdminAddButton(),
-                ],
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildBottomNavItem(IconData icon, int index, bool isActive) {
-    return GestureDetector(
-      behavior: HitTestBehavior.translucent,
-      onTap: () {
-        _pageController.animateToPage(
-          index,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeInOut,
-        );
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: isActive
-            ? BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Colors.white.withOpacity(0.3),
-                    Colors.white.withOpacity(0.2),
-                  ],
-                ),
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: Colors.white.withOpacity(0.4),
-                  width: 1,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.white.withOpacity(0.2),
-                    spreadRadius: 0,
-                    blurRadius: 15,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              )
-            : null,
-        child: Icon(
-          icon,
-          color: isActive ? Colors.white : Colors.white.withOpacity(0.7),
-          size: 24,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildAdminAddButton() {
-    return GestureDetector(
-      onTap: _showAddCarDialog,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              const Color(0xFF4CAF50).withOpacity(0.8),
-              const Color(0xFF2E7D32).withOpacity(0.9),
-            ],
-          ),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: const Color(0xFF81C784),
-            width: 1,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF4CAF50).withOpacity(0.3),
-              spreadRadius: 0,
-              blurRadius: 15,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: const Icon(
-          Icons.add,
-          color: Colors.white,
-          size: 24,
-        ),
-      ),
-    );
+    ContactDialog.show(context);
   }
 }

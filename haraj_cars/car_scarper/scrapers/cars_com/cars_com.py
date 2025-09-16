@@ -18,14 +18,18 @@ def scrape_car(url: str) -> dict:
     if not url or 'cars.com' not in url:
         raise ValueError("Invalid cars.com URL")
     
-    # Try advanced real scraper first
+    # Try advanced real scraper first (with immediate fallback if slow)
     try:
         import sys
         import os
         sys.path.append(os.path.dirname(__file__))
         from cars_com_real import scrape_car_real
+        
         print("🚀 Trying advanced real scraper...")
-        return scrape_car_real(url)
+        result = scrape_car_real(url)
+        # If we get here, we got real data
+        return result
+            
     except ImportError:
         print("⚠️  Advanced scraper not available, trying requests-html...")
     except Exception as e:
@@ -87,8 +91,8 @@ def scrape_car(url: str) -> dict:
         from urllib3.util.retry import Retry
         
         retry_strategy = Retry(
-            total=2,
-            backoff_factor=0.5,
+            total=1,
+            backoff_factor=0.1,
             status_forcelist=[429, 500, 502, 503, 504],
             allowed_methods=["HEAD", "GET", "OPTIONS"]
         )
@@ -97,8 +101,8 @@ def scrape_car(url: str) -> dict:
         session.mount("http://", adapter)
         session.mount("https://", adapter)
         
-        # Make the request with session
-        response = session.get(url, timeout=20, allow_redirects=True)
+        # Make the request with session (ultra-short timeout for speed)
+        response = session.get(url, timeout=2, allow_redirects=True)
         response.raise_for_status()
         
         # Parse the HTML
@@ -221,9 +225,8 @@ def scrape_car(url: str) -> dict:
             
     except Exception as e:
         print(f"⚠️  Real scraping failed: {str(e)}")
-        print("   This is likely due to cars.com's anti-bot protection.")
-        print("   For now, we'll use demo data that varies by URL.")
-        print("   To get real data, you'd need to use Selenium or Playwright.")
+        print("   This is likely due to cars.com's anti-bot protection or network issues.")
+        print("   Using demo data for fast response...")
     
     # Fallback: Generate different demo data based on URL
     import hashlib

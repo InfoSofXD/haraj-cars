@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+
 class Car {
   final int? id;
   final String carId;
@@ -20,8 +22,12 @@ class Car {
   final List<String>? otherImages;
   final String contact;
   final String? vin;
-  final bool status; // true = available, false = not available
-  final bool condition; // true = new (0 miles), false = used (x miles)
+  final int status; // 1 = available, 2 = unavailable, 3 = auction, 4 = sold
+  final DateTime? showAt;
+  final DateTime? unShowAt;
+  final DateTime? auctionStartAt;
+  final DateTime? auctionEndAt;
+  final DateTime? deleteAt;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -48,7 +54,11 @@ class Car {
     required this.contact,
     this.vin,
     required this.status,
-    required this.condition,
+    this.showAt,
+    this.unShowAt,
+    this.auctionStartAt,
+    this.auctionEndAt,
+    this.deleteAt,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -80,8 +90,19 @@ class Car {
           : null,
       contact: json['contact'] ?? '',
       vin: json['vin'],
-      status: json['status'] ?? true, // Default to available
-      condition: json['condition'] ?? false, // Default to used
+      status: json['status'] ?? 1, // Default to available
+      showAt: json['show_at'] != null ? DateTime.parse(json['show_at']) : null,
+      unShowAt: json['un_show_at'] != null
+          ? DateTime.parse(json['un_show_at'])
+          : null,
+      auctionStartAt: json['auction_start_at'] != null
+          ? DateTime.parse(json['auction_start_at'])
+          : null,
+      auctionEndAt: json['auction_end_at'] != null
+          ? DateTime.parse(json['auction_end_at'])
+          : null,
+      deleteAt:
+          json['delete_at'] != null ? DateTime.parse(json['delete_at']) : null,
       createdAt: DateTime.parse(json['created_at']),
       updatedAt: DateTime.parse(json['updated_at']),
     );
@@ -107,7 +128,11 @@ class Car {
       'contact': contact,
       'vin': vin,
       'status': status,
-      'condition': condition,
+      'show_at': showAt?.toIso8601String(),
+      'un_show_at': unShowAt?.toIso8601String(),
+      'auction_start_at': auctionStartAt?.toIso8601String(),
+      'auction_end_at': auctionEndAt?.toIso8601String(),
+      'delete_at': deleteAt?.toIso8601String(),
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
     };
@@ -156,8 +181,12 @@ class Car {
     List<String>? otherImages,
     String? contact,
     String? vin,
-    bool? status,
-    bool? condition,
+    int? status,
+    DateTime? showAt,
+    DateTime? unShowAt,
+    DateTime? auctionStartAt,
+    DateTime? auctionEndAt,
+    DateTime? deleteAt,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -184,7 +213,11 @@ class Car {
       contact: contact ?? this.contact,
       vin: vin ?? this.vin,
       status: status ?? this.status,
-      condition: condition ?? this.condition,
+      showAt: showAt ?? this.showAt,
+      unShowAt: unShowAt ?? this.unShowAt,
+      auctionStartAt: auctionStartAt ?? this.auctionStartAt,
+      auctionEndAt: auctionEndAt ?? this.auctionEndAt,
+      deleteAt: deleteAt ?? this.deleteAt,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -194,13 +227,50 @@ class Car {
   String get computedTitle => '$brand $model $year';
 
   // Status display text
-  String get statusText => status ? 'Available' : 'Not Available';
+  String get statusText {
+    switch (status) {
+      case 1:
+        return 'Available';
+      case 2:
+        return 'Unavailable';
+      case 3:
+        return 'Auction';
+      case 4:
+        return 'Sold';
+      default:
+        return 'Unknown';
+    }
+  }
 
-  // Condition display text
-  String get conditionText => condition ? 'New' : 'Used';
+  // Status color
+  Color get statusColor {
+    switch (status) {
+      case 1:
+        return Colors.green;
+      case 2:
+        return Colors.orange;
+      case 3:
+        return Colors.blue;
+      case 4:
+        return Colors.red;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  // Condition display text based on mileage
+  String get conditionText {
+    if (mileage == 0) return 'New';
+    if (mileage < 30000) return 'Like New';
+    if (mileage < 60000) return 'Good';
+    if (mileage < 100000) return 'Fair';
+    return 'High Mileage';
+  }
 
   // Condition with mileage
-  String get conditionWithMileage => condition
-      ? 'New (0 miles)'
-      : 'Used (${mileage.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')} miles)';
+  String get conditionWithMileage {
+    final formattedMileage = mileage.toString().replaceAllMapped(
+        RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},');
+    return '${conditionText} (${formattedMileage} miles)';
+  }
 }

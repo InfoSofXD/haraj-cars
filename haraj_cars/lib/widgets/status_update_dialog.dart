@@ -19,7 +19,7 @@ class StatusUpdateDialog extends StatefulWidget {
 class _StatusUpdateDialogState extends State<StatusUpdateDialog> {
   final SupabaseService _supabaseService = SupabaseService();
   bool _isLoading = false;
-  late bool _currentStatus;
+  late int _currentStatus;
 
   @override
   void initState() {
@@ -141,35 +141,40 @@ class _StatusUpdateDialogState extends State<StatusUpdateDialog> {
                             ),
                           ),
                           const SizedBox(height: 8),
-                          Row(
-                            children: [
-                              Switch(
-                                value: _currentStatus,
-                                onChanged: _isLoading
-                                    ? null
-                                    : (value) {
-                                        setState(() {
-                                          _currentStatus = value;
-                                        });
-                                      },
-                                activeColor: Colors.green,
+                          DropdownButtonFormField<int>(
+                            value: _currentStatus,
+                            decoration: const InputDecoration(
+                              border: OutlineInputBorder(),
+                              contentPadding: EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 8,
                               ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  _currentStatus
-                                      ? 'Available'
-                                      : 'Not Available',
-                                  style: TextStyle(
-                                    color: _currentStatus
-                                        ? Colors.green
-                                        : Colors.red,
-                                    fontWeight: FontWeight.w500,
-                                    fontSize: 16,
-                                  ),
-                                ),
+                            ),
+                            items: const [
+                              DropdownMenuItem(
+                                value: 1,
+                                child: Text('Available'),
+                              ),
+                              DropdownMenuItem(
+                                value: 2,
+                                child: Text('Unavailable'),
+                              ),
+                              DropdownMenuItem(
+                                value: 3,
+                                child: Text('Auction'),
+                              ),
+                              DropdownMenuItem(
+                                value: 4,
+                                child: Text('Sold'),
                               ),
                             ],
+                            onChanged: _isLoading
+                                ? null
+                                : (value) {
+                                    setState(() {
+                                      _currentStatus = value!;
+                                    });
+                                  },
                           ),
                         ],
                       ),

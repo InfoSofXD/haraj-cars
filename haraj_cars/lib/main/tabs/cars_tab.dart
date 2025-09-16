@@ -4,7 +4,9 @@ import '../../models/car.dart';
 import '../../../supabase/supabase_service.dart';
 import '../../services/favorites_service.dart';
 import '../../../tools/connectivity.dart';
-import '../../cards/car_card.dart';
+import '../../tools/cards/car_card.dart';
+import '../../../tools/Palette/theme.dart' as custom_theme;
+import '../../tools/dialogs/dialogs.dart';
 
 class CarsTab extends StatefulWidget {
   final bool isAdmin;
@@ -39,11 +41,19 @@ class _CarsTabState extends State<CarsTab> {
   // Filter variables
   String _selectedBrand = '';
   String _selectedYear = '';
-  String _selectedCondition = ''; // 'new', 'used', or ''
-  RangeValues _mileageRange = const RangeValues(0, 200000);
+  String _selectedCondition =
+      ''; // 'new', 'like-new', 'good', 'fair', 'high-mileage', 'custom-range', or ''
+  int _selectedStatus =
+      0; // 0 = all, 1 = available, 2 = unavailable, 3 = auction, 4 = sold
   RangeValues _priceRange = const RangeValues(0, 200000);
-  bool _showMileageFilter = false;
+  RangeValues _customConditionRange =
+      const RangeValues(0, 200000); // For custom condition range
+  RangeValues _likeNewRange = const RangeValues(0, 30000);
+  RangeValues _goodRange = const RangeValues(30000, 60000);
+  RangeValues _fairRange = const RangeValues(60000, 100000);
+  RangeValues _highMileageRange = const RangeValues(100000, 500000);
   bool _showPriceFilter = false;
+  bool _showCustomConditionRange = false;
 
   // Dynamic ranges based on actual data
   double _minPrice = 0;
@@ -114,10 +124,9 @@ class _CarsTabState extends State<CarsTab> {
     _minPrice = prices.reduce((a, b) => a < b ? a : b);
     _maxPrice = prices.reduce((a, b) => a > b ? a : b);
 
-    // Calculate mileage range (only for used cars)
-    final usedCars = _cars.where((car) => !car.condition).toList();
-    if (usedCars.isNotEmpty) {
-      final mileages = usedCars.map((car) => car.mileage.toDouble()).toList();
+    // Calculate mileage range (all cars)
+    if (_cars.isNotEmpty) {
+      final mileages = _cars.map((car) => car.mileage.toDouble()).toList();
       _minMileage = mileages.reduce((a, b) => a < b ? a : b);
       _maxMileage = mileages.reduce((a, b) => a > b ? a : b);
     } else {
@@ -128,7 +137,12 @@ class _CarsTabState extends State<CarsTab> {
     // Update range values
     setState(() {
       _priceRange = RangeValues(_minPrice, _maxPrice);
-      _mileageRange = RangeValues(_minMileage, _maxMileage);
+      _customConditionRange = RangeValues(_minMileage, _maxMileage);
+      // Keep condition ranges with their own fixed limits, not limited by data
+      _likeNewRange = const RangeValues(0, 30000);
+      _goodRange = const RangeValues(30000, 60000);
+      _fairRange = const RangeValues(60000, 100000);
+      _highMileageRange = const RangeValues(100000, 500000);
     });
   }
 
@@ -139,8 +153,9 @@ class _CarsTabState extends State<CarsTab> {
       _selectedBrand = '';
       _selectedYear = '';
       _selectedCondition = '';
-      _showMileageFilter = false;
+      _selectedStatus = 0;
       _showPriceFilter = false;
+      _showCustomConditionRange = false;
     });
     await _loadCars();
 
@@ -181,22 +196,38 @@ class _CarsTabState extends State<CarsTab> {
         bool matchesYear =
             _selectedYear.isEmpty || car.year.toString() == _selectedYear;
 
-        // Condition filter
+        // Status filter
+        bool matchesStatus =
+            _selectedStatus == 0 || car.status == _selectedStatus;
+
+        // Condition filter based on mileage
         bool matchesCondition = true;
         if (_selectedCondition.isNotEmpty) {
           if (_selectedCondition == 'new') {
-            matchesCondition = car.condition; // true = new
-          } else if (_selectedCondition == 'used') {
-            matchesCondition = !car.condition; // false = used
+            matchesCondition = car.mileage == 0;
+          } else if (_selectedCondition == 'like-new') {
+            matchesCondition = car.mileage >= _likeNewRange.start &&
+                car.mileage <= _likeNewRange.end;
+          } else if (_selectedCondition == 'good') {
+            matchesCondition = car.mileage >= _goodRange.start &&
+                car.mileage <= _goodRange.end;
+          } else if (_selectedCondition == 'fair') {
+            matchesCondition = car.mileage >= _fairRange.start &&
+                car.mileage <= _fairRange.end;
+          } else if (_selectedCondition == 'high-mileage') {
+            matchesCondition = car.mileage >= _highMileageRange.start &&
+                car.mileage <= _highMileageRange.end;
+          } else if (_selectedCondition == 'custom-range') {
+            matchesCondition = car.mileage >= _customConditionRange.start &&
+                car.mileage <= _customConditionRange.end;
           }
         }
 
-        // Mileage filter (only for used cars)
+        // Mileage filter (only for custom range)
         bool matchesMileage = true;
-        if (_selectedCondition == 'used' ||
-            (_selectedCondition.isEmpty && !car.condition)) {
-          matchesMileage = car.mileage >= _mileageRange.start &&
-              car.mileage <= _mileageRange.end;
+        if (_selectedCondition == 'custom-range') {
+          matchesMileage = car.mileage >= _customConditionRange.start &&
+              car.mileage <= _customConditionRange.end;
         }
 
         // Price filter
@@ -205,6 +236,7 @@ class _CarsTabState extends State<CarsTab> {
 
         return matchesBrand &&
             matchesYear &&
+            matchesStatus &&
             matchesCondition &&
             matchesMileage &&
             matchesPrice;
@@ -262,8 +294,13 @@ class _CarsTabState extends State<CarsTab> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Container(
-      color: Colors.white,
+      color: theme.brightness == Brightness.dark
+          ? colorScheme.background
+          : Colors.white,
       child: Stack(
         children: [
           // Main Content
@@ -294,21 +331,23 @@ class _CarsTabState extends State<CarsTab> {
   }
 
   Widget _buildCarsList() {
+    final theme = Theme.of(context);
+
     if (_isLoading) {
-      return const Center(
+      return Center(
         child: CircularProgressIndicator(
-          color: Color(0xFF2196F3),
+          color: theme.colorScheme.primary,
         ),
       );
     }
 
     if (_filteredCars.isEmpty) {
-      return const Center(
+      return Center(
         child: Text(
           'No cars found',
           style: TextStyle(
             fontSize: 16,
-            color: Colors.grey,
+            color: theme.colorScheme.onBackground.withOpacity(0.6),
             fontFamily: 'Tajawal',
           ),
         ),
@@ -341,8 +380,8 @@ class _CarsTabState extends State<CarsTab> {
           padding: const EdgeInsets.only(
             left: 16,
             right: 16,
-            top: 200, // Space for floating title/search/filter to hover above
-            bottom: 100, // Space for floating bottom nav bar
+            top: 200,
+            bottom: 100,
           ),
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: crossAxisCount,
@@ -370,6 +409,8 @@ class _CarsTabState extends State<CarsTab> {
   }
 
   Widget _buildSearchBar() {
+    final theme = Theme.of(context);
+
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
       child: ClipRRect(
@@ -378,32 +419,22 @@ class _CarsTabState extends State<CarsTab> {
           filter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
           child: Container(
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  const Color(0xFF2196F3).withOpacity(0.3),
-                  const Color(0xFF1976D2).withOpacity(0.4),
-                  const Color(0xFF1565C0).withOpacity(0.3),
-                ],
-              ),
+              color: theme.brightness == Brightness.dark
+                  ? Colors.grey[700]!.withOpacity(0.3)
+                  : custom_theme.light.shade100.withOpacity(0.3),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: const Color(0xFF42A5F5),
+                color: theme.brightness == Brightness.dark
+                    ? Colors.white
+                    : custom_theme.light.shade300,
                 width: 1,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFF2196F3).withOpacity(0.4),
+                  color: Colors.black.withOpacity(0.3),
                   spreadRadius: 0,
                   blurRadius: 20,
                   offset: const Offset(0, 8),
-                ),
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  spreadRadius: 0,
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
                 ),
               ],
             ),
@@ -412,21 +443,27 @@ class _CarsTabState extends State<CarsTab> {
                 Expanded(
                   child: TextField(
                     controller: _searchController,
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: TextStyle(
+                      color: theme.brightness == Brightness.dark
+                          ? Colors.white
+                          : custom_theme.light.shade800,
                       fontSize: 16,
                       fontFamily: 'Tajawal',
                     ),
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       hintText: 'Search for cars...',
                       hintStyle: TextStyle(
-                        color: Colors.white70,
+                        color: theme.brightness == Brightness.dark
+                            ? Colors.white.withOpacity(0.7)
+                            : custom_theme.light.shade600,
                         fontSize: 16,
                         fontFamily: 'Tajawal',
                       ),
                       prefixIcon: Icon(
                         Icons.search,
-                        color: Colors.white,
+                        color: theme.brightness == Brightness.dark
+                            ? Colors.white
+                            : custom_theme.light.shade700,
                         size: 24,
                       ),
                       border: InputBorder.none,
@@ -443,23 +480,29 @@ class _CarsTabState extends State<CarsTab> {
                     margin: const EdgeInsets.all(8),
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
+                      color: theme.brightness == Brightness.dark
+                          ? Colors.white.withOpacity(0.2)
+                          : custom_theme.light.shade200.withOpacity(0.5),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: _isLoading
-                        ? const SizedBox(
+                        ? SizedBox(
                             width: 20,
                             height: 20,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
                               valueColor: AlwaysStoppedAnimation<Color>(
-                                Colors.white,
+                                theme.brightness == Brightness.dark
+                                    ? Colors.white
+                                    : custom_theme.light.shade700,
                               ),
                             ),
                           )
-                        : const Icon(
+                        : Icon(
                             Icons.refresh,
-                            color: Colors.white,
+                            color: theme.brightness == Brightness.dark
+                                ? Colors.white
+                                : custom_theme.light.shade700,
                             size: 20,
                           ),
                   ),
@@ -473,6 +516,8 @@ class _CarsTabState extends State<CarsTab> {
   }
 
   Widget _buildFilterSection() {
+    final theme = Theme.of(context);
+
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
       child: ClipRRect(
@@ -482,32 +527,22 @@ class _CarsTabState extends State<CarsTab> {
           child: Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  const Color(0xFF2196F3).withOpacity(0.3),
-                  const Color(0xFF1976D2).withOpacity(0.4),
-                  const Color(0xFF1565C0).withOpacity(0.3),
-                ],
-              ),
+              color: theme.brightness == Brightness.dark
+                  ? Colors.grey[700]!.withOpacity(0.3)
+                  : custom_theme.light.shade100.withOpacity(0.3),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: const Color(0xFF42A5F5),
+                color: theme.brightness == Brightness.dark
+                    ? Colors.white
+                    : custom_theme.light.shade300,
                 width: 1,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFF2196F3).withOpacity(0.4),
+                  color: Colors.black.withOpacity(0.3),
                   spreadRadius: 0,
                   blurRadius: 20,
                   offset: const Offset(0, 8),
-                ),
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  spreadRadius: 0,
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
                 ),
               ],
             ),
@@ -520,6 +555,7 @@ class _CarsTabState extends State<CarsTab> {
                     _buildFilterIcon(Icons.new_releases, 'CONDITION'),
                     _buildFilterIcon(Icons.calendar_today, 'YEAR'),
                     _buildFilterIcon(Icons.directions_car, 'BRAND'),
+                    _buildFilterIcon(Icons.info, 'STATUS'),
                     _buildFilterIcon(Icons.local_offer, 'PRICE'),
                   ],
                 ),
@@ -533,15 +569,21 @@ class _CarsTabState extends State<CarsTab> {
                     const SizedBox(width: 8),
                     Expanded(child: _buildBrandFilter()),
                     const SizedBox(width: 8),
+                    Expanded(child: _buildStatusFilter()),
+                    const SizedBox(width: 8),
                     Expanded(child: _buildPriceFilter()),
                   ],
                 ),
                 // Advanced filters
-                if (_showMileageFilter || _showPriceFilter) ...[
+                if (_showPriceFilter ||
+                    _showCustomConditionRange ||
+                    _shouldShowConditionRange()) ...[
                   const SizedBox(height: 16),
-                  if (_showMileageFilter && _selectedCondition == 'used')
-                    _buildMileageRangeFilter(),
                   if (_showPriceFilter) _buildPriceRangeFilter(),
+                  if (_showCustomConditionRange)
+                    _buildCustomConditionRangeFilter(),
+                  if (_shouldShowConditionRange() && !_showCustomConditionRange)
+                    _buildConditionRangeDisplay(),
                 ],
               ],
             ),
@@ -552,14 +594,22 @@ class _CarsTabState extends State<CarsTab> {
   }
 
   Widget _buildFilterIcon(IconData icon, String label) {
+    final theme = Theme.of(context);
+
     return Column(
       children: [
-        Icon(icon, color: Colors.white.withOpacity(0.8), size: 24),
+        Icon(icon,
+            color: theme.brightness == Brightness.dark
+                ? Colors.white.withOpacity(0.8)
+                : custom_theme.light.shade700,
+            size: 24),
         if (label.isNotEmpty)
           Text(
             label,
             style: TextStyle(
-              color: Colors.white.withOpacity(0.7),
+              color: theme.brightness == Brightness.dark
+                  ? Colors.white.withOpacity(0.7)
+                  : custom_theme.light.shade600,
               fontSize: 10,
               fontFamily: 'Tajawal',
               fontWeight: FontWeight.w500,
@@ -570,7 +620,10 @@ class _CarsTabState extends State<CarsTab> {
   }
 
   Widget _buildConditionFilter() {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final isSelected = _selectedCondition.isNotEmpty;
+
     return GestureDetector(
       onTap: () => _showConditionFilter(),
       child: Container(
@@ -581,25 +634,32 @@ class _CarsTabState extends State<CarsTab> {
             end: Alignment.bottomRight,
             colors: isSelected
                 ? [
-                    const Color(0xFF2196F3),
-                    const Color(0xFF1976D2),
+                    colorScheme.primary,
+                    colorScheme.primary.withOpacity(0.8),
                   ]
-                : [
-                    Colors.white.withOpacity(0.1),
-                    Colors.white.withOpacity(0.05),
-                  ],
+                : theme.brightness == Brightness.dark
+                    ? [
+                        Colors.white.withOpacity(0.1),
+                        Colors.white.withOpacity(0.05),
+                      ]
+                    : [
+                        custom_theme.light.shade200.withOpacity(0.3),
+                        custom_theme.light.shade100.withOpacity(0.5),
+                      ],
           ),
           borderRadius: BorderRadius.circular(25),
           border: Border.all(
             color: isSelected
-                ? const Color(0xFF42A5F5)
-                : Colors.white.withOpacity(0.3),
+                ? colorScheme.primary
+                : theme.brightness == Brightness.dark
+                    ? Colors.white.withOpacity(0.3)
+                    : custom_theme.light.shade400,
             width: 1,
           ),
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: const Color(0xFF42A5F5).withOpacity(0.3),
+                    color: colorScheme.primary.withOpacity(0.3),
                     spreadRadius: 0,
                     blurRadius: 8,
                     offset: const Offset(0, 2),
@@ -608,12 +668,20 @@ class _CarsTabState extends State<CarsTab> {
               : null,
         ),
         child: Text(
-          _selectedCondition.isEmpty ? 'ALL' : _selectedCondition.toUpperCase(),
+          _selectedCondition.isEmpty
+              ? 'ALL'
+              : _selectedCondition == 'custom-range'
+                  ? 'CUSTOM RANGE'
+                  : _getConditionDisplayText(),
           style: TextStyle(
             fontSize: 11,
             fontWeight: FontWeight.w600,
             fontFamily: 'Tajawal',
-            color: isSelected ? Colors.white : Colors.white.withOpacity(0.8),
+            color: isSelected
+                ? Colors.white
+                : theme.brightness == Brightness.dark
+                    ? Colors.white.withOpacity(0.8)
+                    : custom_theme.light.shade700,
           ),
           textAlign: TextAlign.center,
         ),
@@ -622,16 +690,31 @@ class _CarsTabState extends State<CarsTab> {
   }
 
   Widget _buildYearFilter() {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final isSelected = _selectedYear.isNotEmpty;
+
     return GestureDetector(
       onTap: () => _showYearFilter(),
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
         decoration: BoxDecoration(
-          color: isSelected ? Colors.white : Colors.white.withOpacity(0.2),
+          color: isSelected
+              ? (theme.brightness == Brightness.dark
+                  ? Colors.white
+                  : colorScheme.primary)
+              : theme.brightness == Brightness.dark
+                  ? Colors.white.withOpacity(0.2)
+                  : custom_theme.light.shade200.withOpacity(0.5),
           borderRadius: BorderRadius.circular(25),
           border: Border.all(
-            color: isSelected ? Colors.white : Colors.white.withOpacity(0.3),
+            color: isSelected
+                ? (theme.brightness == Brightness.dark
+                    ? Colors.white
+                    : colorScheme.primary)
+                : theme.brightness == Brightness.dark
+                    ? Colors.white.withOpacity(0.3)
+                    : custom_theme.light.shade400,
             width: 1,
           ),
         ),
@@ -641,7 +724,13 @@ class _CarsTabState extends State<CarsTab> {
             fontSize: 11,
             fontWeight: FontWeight.w600,
             fontFamily: 'Tajawal',
-            color: isSelected ? const Color(0xFF1976D2) : Colors.white,
+            color: isSelected
+                ? (theme.brightness == Brightness.dark
+                    ? Colors.black
+                    : Colors.white)
+                : theme.brightness == Brightness.dark
+                    ? Colors.white
+                    : custom_theme.light.shade700,
           ),
           textAlign: TextAlign.center,
         ),
@@ -650,16 +739,31 @@ class _CarsTabState extends State<CarsTab> {
   }
 
   Widget _buildBrandFilter() {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final isSelected = _selectedBrand.isNotEmpty;
+
     return GestureDetector(
       onTap: () => _showBrandFilter(),
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
         decoration: BoxDecoration(
-          color: isSelected ? Colors.white : Colors.white.withOpacity(0.2),
+          color: isSelected
+              ? (theme.brightness == Brightness.dark
+                  ? Colors.white
+                  : colorScheme.primary)
+              : theme.brightness == Brightness.dark
+                  ? Colors.white.withOpacity(0.2)
+                  : custom_theme.light.shade200.withOpacity(0.5),
           borderRadius: BorderRadius.circular(25),
           border: Border.all(
-            color: isSelected ? Colors.white : Colors.white.withOpacity(0.3),
+            color: isSelected
+                ? (theme.brightness == Brightness.dark
+                    ? Colors.white
+                    : colorScheme.primary)
+                : theme.brightness == Brightness.dark
+                    ? Colors.white.withOpacity(0.3)
+                    : custom_theme.light.shade400,
             width: 1,
           ),
         ),
@@ -669,7 +773,13 @@ class _CarsTabState extends State<CarsTab> {
             fontSize: 11,
             fontWeight: FontWeight.w600,
             fontFamily: 'Tajawal',
-            color: isSelected ? const Color(0xFF1976D2) : Colors.white,
+            color: isSelected
+                ? (theme.brightness == Brightness.dark
+                    ? Colors.black
+                    : Colors.white)
+                : theme.brightness == Brightness.dark
+                    ? Colors.white
+                    : custom_theme.light.shade700,
           ),
           textAlign: TextAlign.center,
         ),
@@ -678,6 +788,8 @@ class _CarsTabState extends State<CarsTab> {
   }
 
   Widget _buildPriceFilter() {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final isDefaultRange =
         _priceRange.start == _minPrice && _priceRange.end == _maxPrice;
     final isSelected = !isDefaultRange;
@@ -687,10 +799,22 @@ class _CarsTabState extends State<CarsTab> {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
         decoration: BoxDecoration(
-          color: isSelected ? Colors.white : Colors.white.withOpacity(0.2),
+          color: isSelected
+              ? (theme.brightness == Brightness.dark
+                  ? Colors.white
+                  : colorScheme.primary)
+              : theme.brightness == Brightness.dark
+                  ? Colors.white.withOpacity(0.2)
+                  : custom_theme.light.shade200.withOpacity(0.5),
           borderRadius: BorderRadius.circular(25),
           border: Border.all(
-            color: isSelected ? Colors.white : Colors.white.withOpacity(0.3),
+            color: isSelected
+                ? (theme.brightness == Brightness.dark
+                    ? Colors.white
+                    : colorScheme.primary)
+                : theme.brightness == Brightness.dark
+                    ? Colors.white.withOpacity(0.3)
+                    : custom_theme.light.shade400,
             width: 1,
           ),
         ),
@@ -702,62 +826,16 @@ class _CarsTabState extends State<CarsTab> {
             fontSize: 11,
             fontWeight: FontWeight.w600,
             fontFamily: 'Tajawal',
-            color: isSelected ? const Color(0xFF1976D2) : Colors.white,
+            color: isSelected
+                ? (theme.brightness == Brightness.dark
+                    ? Colors.black
+                    : Colors.white)
+                : theme.brightness == Brightness.dark
+                    ? Colors.white
+                    : custom_theme.light.shade700,
           ),
           textAlign: TextAlign.center,
         ),
-      ),
-    );
-  }
-
-  Widget _buildMileageRangeFilter() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.white.withOpacity(0.3)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Mileage Range (for used cars)',
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: Colors.white,
-              fontFamily: 'Tajawal',
-            ),
-          ),
-          const SizedBox(height: 8),
-          RangeSlider(
-            values: _mileageRange,
-            min: _minMileage,
-            max: _maxMileage,
-            divisions: (_maxMileage - _minMileage).round() > 0
-                ? (_maxMileage - _minMileage).round()
-                : 1,
-            labels: RangeLabels(
-              '${_mileageRange.start.round()} miles',
-              '${_mileageRange.end.round()} miles',
-            ),
-            onChanged: (RangeValues values) {
-              setState(() {
-                _mileageRange = values;
-              });
-              _applyFilters();
-            },
-          ),
-          Text(
-            'Range: ${_minMileage.round()} - ${_maxMileage.round()} miles',
-            style: const TextStyle(
-              fontSize: 12,
-              color: Colors.white70,
-              fontFamily: 'Tajawal',
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -791,8 +869,8 @@ class _CarsTabState extends State<CarsTab> {
                 ? (_maxPrice - _minPrice).round()
                 : 1,
             labels: RangeLabels(
-              '₳${_priceRange.start.round()}',
-              '₳${_priceRange.end.round()}',
+              '\$${_priceRange.start.round()}',
+              '\$${_priceRange.end.round()}',
             ),
             onChanged: (RangeValues values) {
               setState(() {
@@ -814,173 +892,342 @@ class _CarsTabState extends State<CarsTab> {
     );
   }
 
-  void _showConditionFilter() {
-    final newCarsCount = _cars.where((car) => car.condition).length;
-    final usedCarsCount = _cars.where((car) => !car.condition).length;
+  Widget _buildCustomConditionRangeFilter() {
+    // Ensure we have valid min/max values
+    final minMileage = _minMileage.isFinite ? _minMileage : 0.0;
+    final maxMileage = _maxMileage.isFinite && _maxMileage > minMileage
+        ? _maxMileage
+        : minMileage + 1000.0;
 
+    // Ensure range values are within bounds
+    final safeRange = RangeValues(
+      _customConditionRange.start.clamp(minMileage, maxMileage),
+      _customConditionRange.end.clamp(minMileage, maxMileage),
+    );
+
+    // Update the range if it was out of bounds
+    if (safeRange != _customConditionRange) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        setState(() {
+          _customConditionRange = safeRange;
+        });
+      });
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.purple.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.purple.withOpacity(0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Mileage Range',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+              fontFamily: 'Tajawal',
+            ),
+          ),
+          const SizedBox(height: 8),
+          RangeSlider(
+            values: safeRange,
+            min: minMileage,
+            max: maxMileage,
+            divisions: (maxMileage - minMileage).round() > 0
+                ? (maxMileage - minMileage).round()
+                : 1,
+            labels: RangeLabels(
+              '${safeRange.start.round()}k',
+              '${safeRange.end.round()}k',
+            ),
+            onChanged: (RangeValues values) {
+              setState(() {
+                _customConditionRange = values;
+              });
+              _applyFilters();
+            },
+          ),
+          Text(
+            'Range: ${minMileage.round()}k - ${maxMileage.round()}k miles',
+            style: const TextStyle(
+              fontSize: 12,
+              color: Colors.white70,
+              fontFamily: 'Tajawal',
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Cars in range: ${_getCustomConditionRangeCount()}',
+            style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: Colors.purple,
+              fontFamily: 'Tajawal',
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  int _getCustomConditionRangeCount() {
+    // Ensure we have valid min/max values
+    final minMileage = _minMileage.isFinite ? _minMileage : 0.0;
+    final maxMileage = _maxMileage.isFinite && _maxMileage > minMileage
+        ? _maxMileage
+        : minMileage + 1000.0;
+
+    final safeRange = RangeValues(
+      _customConditionRange.start.clamp(minMileage, maxMileage),
+      _customConditionRange.end.clamp(minMileage, maxMileage),
+    );
+
+    return _cars
+        .where((car) =>
+            car.mileage >= safeRange.start && car.mileage <= safeRange.end)
+        .length;
+  }
+
+  String _getConditionDisplayText() {
+    switch (_selectedCondition) {
+      case 'new':
+        return 'NEW (0 MILES)';
+      case 'like-new':
+        return 'LIKE NEW (0-30K)';
+      case 'good':
+        return 'GOOD (30K-60K)';
+      case 'fair':
+        return 'FAIR (60K-100K)';
+      case 'high-mileage':
+        return 'HIGH MILEAGE (100K+)';
+      default:
+        return _selectedCondition.replaceAll('-', ' ').toUpperCase();
+    }
+  }
+
+  bool _shouldShowConditionRange() {
+    return _selectedCondition.isNotEmpty &&
+        _selectedCondition != 'new' &&
+        _selectedCondition != 'custom-range';
+  }
+
+  Widget _buildConditionRangeDisplay() {
+    RangeValues conditionRange;
+    Color rangeColor = Colors.grey;
+    String rangeTitle = '';
+    double minValue = 0;
+    double maxValue = 200000;
+
+    switch (_selectedCondition) {
+      case 'like-new':
+        conditionRange = _likeNewRange;
+        rangeColor = Colors.blue;
+        rangeTitle = 'Like New Range';
+        minValue = 0;
+        maxValue = 50000;
+        break;
+      case 'good':
+        conditionRange = _goodRange;
+        rangeColor = Colors.orange;
+        rangeTitle = 'Good Range';
+        minValue = 0;
+        maxValue = 100000;
+        break;
+      case 'fair':
+        conditionRange = _fairRange;
+        rangeColor = Colors.amber;
+        rangeTitle = 'Fair Range';
+        minValue = 0;
+        maxValue = 200000;
+        break;
+      case 'high-mileage':
+        conditionRange = _highMileageRange;
+        rangeColor = Colors.red;
+        rangeTitle = 'High Mileage Range';
+        minValue = 50000;
+        maxValue = 500000;
+        break;
+      default:
+        conditionRange = const RangeValues(0, 100000);
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: rangeColor.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: rangeColor.withOpacity(0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            rangeTitle,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+              fontFamily: 'Tajawal',
+            ),
+          ),
+          const SizedBox(height: 8),
+          RangeSlider(
+            values: conditionRange,
+            min: minValue,
+            max: maxValue,
+            divisions: (maxValue - minValue).round() > 0
+                ? (maxValue - minValue).round()
+                : 1,
+            labels: RangeLabels(
+              '${conditionRange.start.round()}k',
+              '${conditionRange.end.round()}k',
+            ),
+            onChanged: (RangeValues values) {
+              setState(() {
+                switch (_selectedCondition) {
+                  case 'like-new':
+                    _likeNewRange = values;
+                    break;
+                  case 'good':
+                    _goodRange = values;
+                    break;
+                  case 'fair':
+                    _fairRange = values;
+                    break;
+                  case 'high-mileage':
+                    _highMileageRange = values;
+                    break;
+                }
+              });
+              _applyFilters();
+            },
+          ),
+          const SizedBox(height: 4),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Min: ${conditionRange.start.round()}k',
+                style: TextStyle(
+                  fontSize: 11,
+                  color: Colors.white70,
+                  fontFamily: 'Tajawal',
+                ),
+              ),
+              Text(
+                'Max: ${conditionRange.end.round()}k',
+                style: TextStyle(
+                  fontSize: 11,
+                  color: Colors.white70,
+                  fontFamily: 'Tajawal',
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Cars in this range: ${_getConditionRangeCount()}',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: rangeColor,
+              fontFamily: 'Tajawal',
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  int _getConditionRangeCount() {
+    switch (_selectedCondition) {
+      case 'like-new':
+        return _cars
+            .where((car) =>
+                car.mileage >= _likeNewRange.start &&
+                car.mileage <= _likeNewRange.end)
+            .length;
+      case 'good':
+        return _cars
+            .where((car) =>
+                car.mileage >= _goodRange.start &&
+                car.mileage <= _goodRange.end)
+            .length;
+      case 'fair':
+        return _cars
+            .where((car) =>
+                car.mileage >= _fairRange.start &&
+                car.mileage <= _fairRange.end)
+            .length;
+      case 'high-mileage':
+        return _cars
+            .where((car) =>
+                car.mileage >= _highMileageRange.start &&
+                car.mileage <= _highMileageRange.end)
+            .length;
+      default:
+        return 0;
+    }
+  }
+
+  void _showConditionFilter() {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Filter by Condition'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              title: Text('All (${_cars.length} cars)'),
-              leading: Radio<String>(
-                value: '',
-                groupValue: _selectedCondition,
-                onChanged: (value) {
-                  setState(() {
-                    _selectedCondition = value!;
-                    _showMileageFilter = false;
-                  });
-                  Navigator.pop(context);
-                  _applyFilters();
-                },
-              ),
-            ),
-            ListTile(
-              title: Text('New (0 miles) ($newCarsCount cars)'),
-              leading: Radio<String>(
-                value: 'new',
-                groupValue: _selectedCondition,
-                onChanged: (value) {
-                  setState(() {
-                    _selectedCondition = value!;
-                    _showMileageFilter = false;
-                  });
-                  Navigator.pop(context);
-                  _applyFilters();
-                },
-              ),
-            ),
-            ListTile(
-              title: Text('Used (with mileage) ($usedCarsCount cars)'),
-              leading: Radio<String>(
-                value: 'used',
-                groupValue: _selectedCondition,
-                onChanged: (value) {
-                  setState(() {
-                    _selectedCondition = value!;
-                    _showMileageFilter = true;
-                  });
-                  Navigator.pop(context);
-                  _applyFilters();
-                },
-              ),
-            ),
-          ],
-        ),
+      builder: (context) => ConditionFilterDialog(
+        cars: _cars,
+        selectedCondition: _selectedCondition,
+        onConditionSelected: (value, rangeValues) {
+          setState(() {
+            _selectedCondition = value;
+            // If custom range is selected, show the range selector and update values
+            if (value == 'custom-range') {
+              _showCustomConditionRange = true;
+              if (rangeValues != null) {
+                _customConditionRange = rangeValues;
+              } else {
+                // Initialize with current data range if no range provided
+                _customConditionRange = RangeValues(_minMileage, _maxMileage);
+              }
+            } else {
+              _showCustomConditionRange = false;
+            }
+          });
+          _applyFilters();
+        },
       ),
     );
   }
 
   void _showYearFilter() {
-    // Get unique years from actual car data, sorted descending
-    final years = _cars.map((car) => car.year).toSet().toList()
-      ..sort((a, b) => b.compareTo(a));
-    final yearStrings = years.map((year) => year.toString()).toList();
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Filter by Year'),
-        content: SizedBox(
-          width: double.maxFinite,
-          height: 300,
-          child: ListView.builder(
-            itemCount: yearStrings.length + 1,
-            itemBuilder: (context, index) {
-              if (index == 0) {
-                return ListTile(
-                  title: const Text('All Years'),
-                  leading: Radio<String>(
-                    value: '',
-                    groupValue: _selectedYear,
-                    onChanged: (value) {
-                      setState(() {
-                        _selectedYear = value!;
-                      });
-                      Navigator.pop(context);
-                      _applyFilters();
-                    },
-                  ),
-                );
-              }
-              final year = yearStrings[index - 1];
-              final carCount =
-                  _cars.where((car) => car.year.toString() == year).length;
-              return ListTile(
-                title: Text('$year ($carCount cars)'),
-                leading: Radio<String>(
-                  value: year,
-                  groupValue: _selectedYear,
-                  onChanged: (value) {
-                    setState(() {
-                      _selectedYear = value!;
-                    });
-                    Navigator.pop(context);
-                    _applyFilters();
-                  },
-                ),
-              );
-            },
-          ),
-        ),
-      ),
+    YearFilterDialog.show(
+      context,
+      cars: _cars,
+      selectedYear: _selectedYear,
+      onYearSelected: (value) {
+        setState(() {
+          _selectedYear = value;
+        });
+        _applyFilters();
+      },
     );
   }
 
   void _showBrandFilter() {
-    final brands = _cars.map((car) => car.brand).toSet().toList()..sort();
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Filter by Brand'),
-        content: SizedBox(
-          width: double.maxFinite,
-          height: 300,
-          child: ListView.builder(
-            itemCount: brands.length + 1,
-            itemBuilder: (context, index) {
-              if (index == 0) {
-                return ListTile(
-                  title: const Text('All Brands'),
-                  leading: Radio<String>(
-                    value: '',
-                    groupValue: _selectedBrand,
-                    onChanged: (value) {
-                      setState(() {
-                        _selectedBrand = value!;
-                      });
-                      Navigator.pop(context);
-                      _applyFilters();
-                    },
-                  ),
-                );
-              }
-              final brand = brands[index - 1];
-              final carCount = _cars.where((car) => car.brand == brand).length;
-              return ListTile(
-                title: Text('$brand ($carCount cars)'),
-                leading: Radio<String>(
-                  value: brand,
-                  groupValue: _selectedBrand,
-                  onChanged: (value) {
-                    setState(() {
-                      _selectedBrand = value!;
-                    });
-                    Navigator.pop(context);
-                    _applyFilters();
-                  },
-                ),
-              );
-            },
-          ),
-        ),
-      ),
+    BrandFilterDialog.show(
+      context,
+      cars: _cars,
+      selectedBrand: _selectedBrand,
+      onBrandSelected: (value) {
+        setState(() {
+          _selectedBrand = value;
+        });
+        _applyFilters();
+      },
     );
   }
 
@@ -988,5 +1235,77 @@ class _CarsTabState extends State<CarsTab> {
     setState(() {
       _showPriceFilter = !_showPriceFilter;
     });
+  }
+
+  Widget _buildStatusFilter() {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isSelected = _selectedStatus != 0;
+
+    String statusText = 'STATUS';
+    if (_selectedStatus == 1)
+      statusText = 'AVAILABLE';
+    else if (_selectedStatus == 2)
+      statusText = 'UNAVAILABLE';
+    else if (_selectedStatus == 3)
+      statusText = 'AUCTION';
+    else if (_selectedStatus == 4) statusText = 'SOLD';
+
+    return GestureDetector(
+      onTap: () => _showStatusFilter(),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? (theme.brightness == Brightness.dark
+                  ? Colors.white
+                  : colorScheme.primary)
+              : theme.brightness == Brightness.dark
+                  ? Colors.white.withOpacity(0.2)
+                  : custom_theme.light.shade200.withOpacity(0.5),
+          borderRadius: BorderRadius.circular(25),
+          border: Border.all(
+            color: isSelected
+                ? (theme.brightness == Brightness.dark
+                    ? Colors.white
+                    : colorScheme.primary)
+                : theme.brightness == Brightness.dark
+                    ? Colors.white.withOpacity(0.3)
+                    : custom_theme.light.shade400,
+            width: 1,
+          ),
+        ),
+        child: Text(
+          statusText,
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+            fontFamily: 'Tajawal',
+            color: isSelected
+                ? (theme.brightness == Brightness.dark
+                    ? Colors.black
+                    : Colors.white)
+                : theme.brightness == Brightness.dark
+                    ? Colors.white
+                    : custom_theme.light.shade700,
+          ),
+          textAlign: TextAlign.center,
+        ),
+      ),
+    );
+  }
+
+  void _showStatusFilter() {
+    StatusFilterDialog.show(
+      context,
+      cars: _cars,
+      selectedStatus: _selectedStatus,
+      onStatusSelected: (value) {
+        setState(() {
+          _selectedStatus = value;
+        });
+        _applyFilters();
+      },
+    );
   }
 }

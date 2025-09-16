@@ -44,19 +44,30 @@ def scrape_endpoint():
                 'error': 'Invalid URL. Please provide a proper car listing URL, not car data text. Example: https://www.manheim.com.au/passenger-vehicles/7259077/2021-chevrolet-silverado-1500-ltz-premium-4d-dual-cab-utility'
             }), 400
         
-        # Call your real scraper function
-        car_data = scrape_car(url)
+        print(f"🔍 Scraping URL: {url}")
         
-        return jsonify({
-            'success': True,
-            'data': car_data
-        })
+        # Call your real scraper function with better error handling
+        try:
+            car_data = scrape_car(url)
+            print(f"✅ Scraping successful: {len(car_data)} fields")
+            
+            return jsonify({
+                'success': True,
+                'data': car_data
+            })
+            
+        except Exception as scraper_error:
+            print(f"❌ Scraper error: {str(scraper_error)}")
+            return jsonify({
+                'success': False,
+                'error': f'Scraping failed: {str(scraper_error)}'
+            }), 500
         
     except Exception as e:
-        print(f"❌ Scraping error: {str(e)}")
+        print(f"❌ Flask error: {str(e)}")
         return jsonify({
             'success': False,
-            'error': f'Scraping failed: {str(e)}'
+            'error': f'Server error: {str(e)}'
         }), 500
 
 @app.route('/sites', methods=['GET'])

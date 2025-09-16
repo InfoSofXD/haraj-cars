@@ -58,7 +58,7 @@ class _AccountTabState extends State<AccountTab> {
     if (_isLoading) {
       return const Center(
         child: CircularProgressIndicator(
-          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+          valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF1976D2)),
         ),
       );
     }
@@ -88,12 +88,19 @@ class _AccountTabState extends State<AccountTab> {
                       Container(
                         padding: const EdgeInsets.all(24),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.1),
+                          color: Colors.white,
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
-                            color: Colors.white.withOpacity(0.2),
+                            color: const Color(0xFFBBDEFB),
                             width: 1,
                           ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.05),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
                         ),
                         child: Column(
                           children: [
@@ -102,17 +109,17 @@ class _AccountTabState extends State<AccountTab> {
                               width: 80,
                               height: 80,
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.2),
+                                color: const Color(0xFFE3F2FD),
                                 shape: BoxShape.circle,
                                 border: Border.all(
-                                  color: Colors.white.withOpacity(0.3),
+                                  color: const Color(0xFFBBDEFB),
                                   width: 2,
                                 ),
                               ),
                               child: Icon(
                                 Icons.person,
                                 size: 40,
-                                color: Colors.white,
+                                color: const Color(0xFF1976D2),
                               ),
                             ),
 
@@ -122,7 +129,7 @@ class _AccountTabState extends State<AccountTab> {
                             Text(
                               _user?.userMetadata?['full_name'] ?? 'Guest User',
                               style: const TextStyle(
-                                color: Colors.white,
+                                color: Color(0xFF0D47A1),
                                 fontSize: 24,
                                 fontWeight: FontWeight.bold,
                                 fontFamily: 'Tajawal',
@@ -136,7 +143,7 @@ class _AccountTabState extends State<AccountTab> {
                             Text(
                               _user?.email ?? 'No email',
                               style: TextStyle(
-                                color: Colors.white.withOpacity(0.8),
+                                color: Colors.grey[700],
                                 fontSize: 16,
                                 fontFamily: 'Tajawal',
                               ),
@@ -150,7 +157,7 @@ class _AccountTabState extends State<AccountTab> {
                               Text(
                                 _user!.userMetadata!['phone'],
                                 style: TextStyle(
-                                  color: Colors.white.withOpacity(0.8),
+                                  color: Colors.grey[700],
                                   fontSize: 16,
                                   fontFamily: 'Tajawal',
                                 ),
@@ -242,13 +249,14 @@ class _AccountTabState extends State<AccountTab> {
                           child: ElevatedButton(
                             onPressed: _signOut,
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.red.withOpacity(0.8),
+                              backgroundColor: const Color(0xFFD32F2F),
                               foregroundColor: Colors.white,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(28),
                               ),
                               elevation: 8,
-                              shadowColor: Colors.red.withOpacity(0.3),
+                              shadowColor:
+                                  const Color(0xFFD32F2F).withOpacity(0.3),
                             ),
                             child: const Text(
                               'Sign Out',
@@ -378,12 +386,19 @@ class _AccountTabState extends State<AccountTab> {
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.1),
+          color: Colors.white,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: Colors.white.withOpacity(0.2),
+            color: const Color(0xFFBBDEFB),
             width: 1,
           ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: Row(
           children: [
@@ -391,12 +406,12 @@ class _AccountTabState extends State<AccountTab> {
               width: 48,
               height: 48,
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
+                color: const Color(0xFFE3F2FD),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(
                 icon,
-                color: Colors.white,
+                color: Color(0xFF1976D2),
                 size: 24,
               ),
             ),
@@ -408,7 +423,7 @@ class _AccountTabState extends State<AccountTab> {
                   Text(
                     title,
                     style: const TextStyle(
-                      color: Colors.white,
+                      color: Color(0xFF0D47A1),
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                       fontFamily: 'Tajawal',
@@ -418,7 +433,7 @@ class _AccountTabState extends State<AccountTab> {
                   Text(
                     subtitle,
                     style: TextStyle(
-                      color: Colors.white.withOpacity(0.8),
+                      color: Colors.grey[700],
                       fontSize: 14,
                       fontFamily: 'Tajawal',
                     ),
@@ -428,7 +443,7 @@ class _AccountTabState extends State<AccountTab> {
             ),
             Icon(
               Icons.arrow_forward_ios,
-              color: Colors.white.withOpacity(0.6),
+              color: Colors.grey[400],
               size: 16,
             ),
           ],
