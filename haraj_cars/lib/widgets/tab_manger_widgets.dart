@@ -350,21 +350,41 @@ class TabManagerWidgets {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      buildBottomNavItem(context, Icons.directions_car, 0,
-                          currentIndex == 0, onTabTapped),
-                      buildBottomNavItem(context, Icons.public, 1,
-                          currentIndex == 1, onTabTapped),
-                      buildBottomNavItem(context, Icons.favorite, 2,
-                          currentIndex == 2, onTabTapped),
-                      buildBottomNavItem(context, Icons.info, 3,
-                          currentIndex == 3, onTabTapped),
-                      buildBottomNavItem(context, Icons.person, 4,
-                          currentIndex == 4, onTabTapped),
+                      // Dashboard tab (admin only)
+                      if (isAdmin)
+                        buildBottomNavItem(context, Icons.dashboard, 0,
+                            currentIndex == 0, onTabTapped),
+                      // Cars tab
+                      buildBottomNavItem(
+                          context,
+                          Icons.directions_car,
+                          isAdmin ? 1 : 0,
+                          currentIndex == (isAdmin ? 1 : 0),
+                          onTabTapped),
+                      // Global Sites tab
+                      buildBottomNavItem(context, Icons.public, isAdmin ? 2 : 1,
+                          currentIndex == (isAdmin ? 2 : 1), onTabTapped),
+                      // Community tab
+                      buildBottomNavItem(context, Icons.people, isAdmin ? 3 : 2,
+                          currentIndex == (isAdmin ? 3 : 2), onTabTapped),
+                      // Favorites tab
+                      buildBottomNavItem(
+                          context,
+                          Icons.favorite,
+                          isAdmin ? 4 : 3,
+                          currentIndex == (isAdmin ? 4 : 3),
+                          onTabTapped),
+                      // Info tab
+                      buildBottomNavItem(context, Icons.info, isAdmin ? 5 : 4,
+                          currentIndex == (isAdmin ? 5 : 4), onTabTapped),
+                      // Account tab
+                      buildBottomNavItem(context, Icons.person, isAdmin ? 6 : 5,
+                          currentIndex == (isAdmin ? 6 : 5), onTabTapped),
                     ],
                   ),
                 ),
                 // Admin add button (only show in cars tab when admin)
-                if (isAdmin && currentIndex == 0) ...[
+                if (isAdmin && currentIndex == 1) ...[
                   const SizedBox(width: 16),
                   buildAdminAddButton(context, onAddCar),
                 ],

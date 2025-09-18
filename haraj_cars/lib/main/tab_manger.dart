@@ -16,6 +16,8 @@ import 'tabs/favorites_tab.dart';
 import 'tabs/global_sites_tab.dart';
 import 'tabs/info_tab.dart';
 import 'tabs/account_tab.dart';
+import 'tabs/community_tab.dart';
+import 'tabs/dashboard_tab.dart';
 
 class TabMangerScreen extends StatefulWidget {
   const TabMangerScreen({Key? key}) : super(key: key);
@@ -190,6 +192,15 @@ class _TabMangerScreenState extends State<TabMangerScreen>
         onLoginResult: (success) {
           setState(() {
             _isAdmin = success;
+            if (success) {
+              // Navigate to dashboard when admin logs in
+              _currentIndex = 0;
+              _pageController.animateToPage(
+                0,
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeInOut,
+              );
+            }
           });
         },
       ),
@@ -448,6 +459,17 @@ class _TabMangerScreenState extends State<TabMangerScreen>
                         });
                       },
                       children: [
+                        // Dashboard tab (admin only)
+                        if (_isAdmin)
+                          DashboardTab(
+                            onNavigateToTab: (index) {
+                              _pageController.animateToPage(
+                                index,
+                                duration: const Duration(milliseconds: 300),
+                                curve: Curves.easeInOut,
+                              );
+                            },
+                          ),
                         // Cars tab
                         CarsTab(
                           isAdmin: _isAdmin,
@@ -458,6 +480,8 @@ class _TabMangerScreenState extends State<TabMangerScreen>
                         ),
                         // Global Sites tab
                         const GlobalSitesTab(),
+                        // Community tab
+                        CommunityTab(isAdmin: _isAdmin),
                         // Favorites tab
                         const FavoritesTab(),
                         // Info tab

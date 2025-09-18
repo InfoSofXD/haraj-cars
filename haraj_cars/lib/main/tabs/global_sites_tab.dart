@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:ui';
-import 'package:url_launcher/url_launcher.dart';
+import '../../tools/cards/site_card.dart';
+import '../../../tools/Palette/theme.dart' as custom_theme;
 
 class GlobalSitesTab extends StatelessWidget {
   const GlobalSitesTab({Key? key}) : super(key: key);
@@ -56,19 +57,15 @@ class GlobalSitesTab extends StatelessWidget {
     },
   ];
 
-  Future<void> _launchURL(String url) async {
-    final Uri uri = Uri.parse(url);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    } else {
-      throw 'Could not launch $url';
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Container(
-      color: Colors.white,
+      color: theme.brightness == Brightness.dark
+          ? colorScheme.background
+          : Colors.white,
       child: Stack(
         children: [
           // Main Content
@@ -86,7 +83,12 @@ class GlobalSitesTab extends StatelessWidget {
                   itemCount: carSites.length,
                   itemBuilder: (context, index) {
                     final site = carSites[index];
-                    return _buildSiteCard(site);
+                    return SiteCard(
+                      name: site['name']!,
+                      url: site['url']!,
+                      description: site['description']!,
+                      icon: site['icon']!,
+                    );
                   },
                 ),
               ),
@@ -98,14 +100,17 @@ class GlobalSitesTab extends StatelessWidget {
             top: 0,
             left: 0,
             right: 0,
-            child: _buildFloatingTitle(),
+            child: _buildFloatingTitle(context),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildFloatingTitle() {
+  Widget _buildFloatingTitle(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Container(
       margin: const EdgeInsets.all(16),
       child: ClipRRect(
@@ -115,106 +120,50 @@ class GlobalSitesTab extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  const Color(0xFF2196F3).withOpacity(0.3),
-                  const Color(0xFF1976D2).withOpacity(0.4),
-                  const Color(0xFF1565C0).withOpacity(0.3),
-                ],
-              ),
+              color: theme.brightness == Brightness.dark
+                  ? Colors.grey[700]!.withOpacity(0.3)
+                  : custom_theme.light.shade100.withOpacity(0.3),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: const Color(0xFF42A5F5),
+                color: theme.brightness == Brightness.dark
+                    ? Colors.white
+                    : custom_theme.light.shade300,
                 width: 1,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFF2196F3).withOpacity(0.4),
+                  color: Colors.black.withOpacity(0.3),
                   spreadRadius: 0,
                   blurRadius: 20,
                   offset: const Offset(0, 8),
                 ),
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  spreadRadius: 0,
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
+              ],
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.public,
+                  color: theme.brightness == Brightness.dark
+                      ? Colors.white
+                      : colorScheme.primary,
+                  size: 28,
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  'Global Car Marketplaces',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: theme.brightness == Brightness.dark
+                        ? Colors.white
+                        : colorScheme.onSurface,
+                    fontFamily: 'Tajawal',
+                  ),
                 ),
               ],
             ),
-            child: const Center(
-              child: Text(
-                'Global Car Marketplaces',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                  fontFamily: 'Tajawal',
-                ),
-              ),
-            ),
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildSiteCard(Map<String, String> site) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            spreadRadius: 1,
-            blurRadius: 3,
-            offset: const Offset(0, 1),
-          ),
-        ],
-        border: Border.all(color: Colors.grey[200]!),
-      ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.all(16),
-        leading: Container(
-          width: 50,
-          height: 50,
-          decoration: BoxDecoration(
-            color: const Color(0xFF1976D2).withOpacity(0.1),
-            borderRadius: BorderRadius.circular(25),
-          ),
-          child: Center(
-            child: Text(
-              site['icon']!,
-              style: const TextStyle(fontSize: 24),
-            ),
-          ),
-        ),
-        title: Text(
-          site['name']!,
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            fontFamily: 'Tajawal',
-          ),
-        ),
-        subtitle: Text(
-          site['description']!,
-          style: TextStyle(
-            fontSize: 14,
-            color: Colors.grey[600],
-            fontFamily: 'Tajawal',
-          ),
-        ),
-        trailing: const Icon(
-          Icons.arrow_forward_ios,
-          size: 16,
-          color: Color(0xFF1976D2),
-        ),
-        onTap: () => _launchURL(site['url']!),
       ),
     );
   }

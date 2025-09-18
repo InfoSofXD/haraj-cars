@@ -258,4 +258,165 @@ class SupabaseService {
       print('SupabaseService: Error testing admin table: $e');
     }
   }
+
+  // Get user count from simple database function
+  Future<int> getUserCount() async {
+    try {
+      print('SupabaseService: Getting user count...');
+      final response = await _supabase.rpc('get_simple_user_count');
+      final userCount = response as int;
+      print('SupabaseService: Found $userCount users');
+      return userCount;
+    } catch (e) {
+      print('SupabaseService: Error getting user count: $e');
+      return 0;
+    }
+  }
+
+  // Get all users from simple database function
+  Future<List<Map<String, dynamic>>> getAllUsers() async {
+    try {
+      print('SupabaseService: Getting all users...');
+      final response = await _supabase.rpc('get_all_users');
+      final allUsers = List<Map<String, dynamic>>.from(response);
+      print('SupabaseService: Found ${allUsers.length} users');
+      return allUsers;
+    } catch (e) {
+      print('SupabaseService: Error getting all users: $e');
+      return [];
+    }
+  }
+
+  // Get recent users (first 5 from all users)
+  Future<List<Map<String, dynamic>>> getRecentUsers({int limit = 5}) async {
+    try {
+      final allUsers = await getAllUsers();
+      final recentUsers = allUsers.take(limit).toList();
+      print('SupabaseService: Found ${recentUsers.length} recent users');
+      return recentUsers;
+    } catch (e) {
+      print('SupabaseService: Error getting recent users: $e');
+      return [];
+    }
+  }
+
+  // Get car statistics from database function
+  Future<Map<String, dynamic>> getCarStatistics() async {
+    try {
+      print(
+          'SupabaseService: Getting car statistics from database function...');
+      final response = await _supabase.rpc('get_car_statistics');
+      final stats = response as Map<String, dynamic>;
+
+      print(
+          'SupabaseService: Car statistics - Total: ${stats['total_cars']}, Available: ${stats['available_cars']}, Auction: ${stats['auction_cars']}, Sold: ${stats['sold_cars']}, Unavailable: ${stats['unavailable_cars']}, Avg Price: ${stats['avg_price']}');
+
+      return {
+        'totalCars': stats['total_cars'] ?? 0,
+        'availableCars': stats['available_cars'] ?? 0,
+        'auctionCars': stats['auction_cars'] ?? 0,
+        'soldCars': stats['sold_cars'] ?? 0,
+        'unavailableCars': stats['unavailable_cars'] ?? 0,
+        'avgPrice': (stats['avg_price'] as num?)?.toDouble() ?? 0.0,
+      };
+    } catch (e) {
+      print('SupabaseService: Error getting car statistics: $e');
+      return {
+        'totalCars': 0,
+        'availableCars': 0,
+        'auctionCars': 0,
+        'soldCars': 0,
+        'unavailableCars': 0,
+        'avgPrice': 0,
+      };
+    }
+  }
+
+  // Get recent cars from database function
+  Future<List<Map<String, dynamic>>> getRecentCars({int limit = 5}) async {
+    try {
+      print('SupabaseService: Getting recent cars from database function...');
+      final response = await _supabase
+          .rpc('get_recent_cars', params: {'limit_count': limit});
+      final recentCars = List<Map<String, dynamic>>.from(response);
+      print('SupabaseService: Found ${recentCars.length} recent cars');
+      return recentCars;
+    } catch (e) {
+      print('SupabaseService: Error getting recent cars: $e');
+      return [];
+    }
+  }
+
+  // Get admin count from database function
+  Future<int> getAdminCount() async {
+    try {
+      print('SupabaseService: Getting admin count from database function...');
+      final response = await _supabase.rpc('get_admin_count');
+      final adminCount = response as int;
+      print('SupabaseService: Found $adminCount admins');
+      return adminCount;
+    } catch (e) {
+      print('SupabaseService: Error getting admin count: $e');
+      return 0;
+    }
+  }
+
+  // Get recent admins from database function
+  Future<List<Map<String, dynamic>>> getRecentAdmins({int limit = 5}) async {
+    try {
+      print('SupabaseService: Getting recent admins from database function...');
+      final response = await _supabase
+          .rpc('get_recent_admins', params: {'limit_count': limit});
+      final recentAdmins = List<Map<String, dynamic>>.from(response);
+      print('SupabaseService: Found ${recentAdmins.length} recent admins');
+      return recentAdmins;
+    } catch (e) {
+      print('SupabaseService: Error getting recent admins: $e');
+      return [];
+    }
+  }
+
+  // Get recent posts from database function
+  Future<List<Map<String, dynamic>>> getRecentPosts({int limit = 5}) async {
+    try {
+      print('SupabaseService: Getting recent posts from database function...');
+      final response = await _supabase
+          .rpc('get_recent_posts', params: {'limit_count': limit});
+      final recentPosts = List<Map<String, dynamic>>.from(response);
+      print('SupabaseService: Found ${recentPosts.length} recent posts');
+      return recentPosts;
+    } catch (e) {
+      print('SupabaseService: Error getting recent posts: $e');
+      return [];
+    }
+  }
+
+  // Delete user account (admin only)
+  Future<bool> deleteUser(String userId) async {
+    try {
+      print('SupabaseService: Deleting user $userId...');
+
+      // Use the custom delete function
+      final response = await _supabase.rpc('delete_user_account', params: {
+        'user_id': userId,
+      });
+
+      print('SupabaseService: RPC response: $response');
+      print('SupabaseService: Response type: ${response.runtimeType}');
+
+      final success = response as bool;
+      if (success) {
+        print('SupabaseService: User deleted successfully');
+        return true;
+      } else {
+        print(
+            'SupabaseService: Failed to delete user - function returned false');
+        return false;
+      }
+    } catch (e) {
+      print('SupabaseService: Error deleting user: $e');
+      print('SupabaseService: Error type: ${e.runtimeType}');
+      return false;
+    }
+  }
 }

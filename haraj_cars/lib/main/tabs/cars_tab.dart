@@ -34,8 +34,10 @@ class _CarsTabState extends State<CarsTab> {
 
   List<Car> _cars = [];
   List<Car> _filteredCars = [];
+  List<Car> _auctionCars = [];
   bool _isLoading = true;
   bool _isOnline = true;
+  bool _showAuctionList = true; // Toggle for auction list visibility
   Set<String> _favoriteCarIds = {};
 
   // Filter variables
@@ -98,6 +100,7 @@ class _CarsTabState extends State<CarsTab> {
       setState(() {
         _cars = cars;
         _filteredCars = cars;
+        _auctionCars = cars.where((car) => car.status == 3).toList();
         _isLoading = false;
       });
       _calculateDynamicRanges();
@@ -306,6 +309,8 @@ class _CarsTabState extends State<CarsTab> {
           // Main Content
           Column(
             children: [
+              // Auction cars horizontal list
+              if (_auctionCars.isNotEmpty && mounted) _buildAuctionList(),
               // Main car list (full screen, content scrolls under floating elements)
               Expanded(
                 child: _buildCarsList(),
@@ -324,6 +329,110 @@ class _CarsTabState extends State<CarsTab> {
                 _buildFilterSection(),
               ],
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAuctionList() {
+    if (!mounted || _auctionCars.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    final theme = Theme.of(context);
+
+    return Container(
+      key: const ValueKey('auction_section'),
+      margin: const EdgeInsets.only(top: 200, left: 16, right: 16, bottom: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Auction title with toggle button
+          Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Auction Cars${!_showAuctionList ? ' (${_auctionCars.length})' : ''}',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: theme.brightness == Brightness.dark
+                        ? Colors.white
+                        : custom_theme.light.shade800,
+                    fontFamily: 'Tajawal',
+                  ),
+                ),
+                GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _showAuctionList = !_showAuctionList;
+                    });
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: theme.brightness == Brightness.dark
+                          ? Colors.white.withOpacity(0.1)
+                          : custom_theme.light.shade200.withOpacity(0.5),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: theme.brightness == Brightness.dark
+                            ? Colors.white.withOpacity(0.3)
+                            : custom_theme.light.shade400,
+                        width: 1,
+                      ),
+                    ),
+                    child: Icon(
+                      _showAuctionList
+                          ? Icons.keyboard_arrow_up
+                          : Icons.keyboard_arrow_down,
+                      color: theme.brightness == Brightness.dark
+                          ? Colors.white
+                          : custom_theme.light.shade700,
+                      size: 20,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Horizontal list of auction cars
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+            height: _showAuctionList ? 350 : 0,
+            child: _showAuctionList
+                ? ListView.builder(
+                    key: const ValueKey('auction_list'),
+                    scrollDirection: Axis.horizontal,
+                    itemCount: _auctionCars.length,
+                    itemBuilder: (context, index) {
+                      if (index >= _auctionCars.length) {
+                        return const SizedBox.shrink();
+                      }
+                      final car = _auctionCars[index];
+                      return Container(
+                        key: ValueKey('auction_car_${car.carId}'),
+                        width: 280,
+                        height: 330, // Match the CarCard height
+                        margin: const EdgeInsets.only(right: 16),
+                        child: CarCard(
+                          car: car,
+                          isFavorite: _favoriteCarIds.contains(car.carId),
+                          isAdmin: widget.isAdmin,
+                          onTap: () => widget.onShowCarDetails(car),
+                          onToggleFavorite: () => _toggleFavorite(car),
+                          onEdit: () => widget.onEditCar(car),
+                          onDelete: () => widget.onDeleteCar(car),
+                          onStatusUpdate: () => widget.onShowStatusUpdate(car),
+                        ),
+                      );
+                    },
+                  )
+                : const SizedBox.shrink(),
           ),
         ],
       ),
@@ -377,10 +486,12 @@ class _CarsTabState extends State<CarsTab> {
         childAspectRatio = cardWidth / 330;
 
         return GridView.builder(
-          padding: const EdgeInsets.only(
+          padding: EdgeInsets.only(
             left: 16,
             right: 16,
-            top: 200,
+            top: _auctionCars.isNotEmpty
+                ? (0) // 200 + 20 + 12 for collapsed (margin + title + padding)
+                : 200.0, // 200 for no auction list
             bottom: 100,
           ),
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -467,8 +578,8 @@ class _CarsTabState extends State<CarsTab> {
                         size: 24,
                       ),
                       border: InputBorder.none,
-                      contentPadding:
-                          EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 16),
                     ),
                     onChanged: _searchCars,
                   ),
@@ -1068,7 +1179,7 @@ class _CarsTabState extends State<CarsTab> {
         children: [
           Text(
             rangeTitle,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w600,
               color: Colors.white,
@@ -1113,7 +1224,7 @@ class _CarsTabState extends State<CarsTab> {
             children: [
               Text(
                 'Min: ${conditionRange.start.round()}k',
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 11,
                   color: Colors.white70,
                   fontFamily: 'Tajawal',
@@ -1121,7 +1232,7 @@ class _CarsTabState extends State<CarsTab> {
               ),
               Text(
                 'Max: ${conditionRange.end.round()}k',
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 11,
                   color: Colors.white70,
                   fontFamily: 'Tajawal',
@@ -1243,13 +1354,15 @@ class _CarsTabState extends State<CarsTab> {
     final isSelected = _selectedStatus != 0;
 
     String statusText = 'STATUS';
-    if (_selectedStatus == 1)
+    if (_selectedStatus == 1) {
       statusText = 'AVAILABLE';
-    else if (_selectedStatus == 2)
+    } else if (_selectedStatus == 2) {
       statusText = 'UNAVAILABLE';
-    else if (_selectedStatus == 3)
+    } else if (_selectedStatus == 3) {
       statusText = 'AUCTION';
-    else if (_selectedStatus == 4) statusText = 'SOLD';
+    } else if (_selectedStatus == 4) {
+      statusText = 'SOLD';
+    }
 
     return GestureDetector(
       onTap: () => _showStatusFilter(),

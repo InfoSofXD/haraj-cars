@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:ui';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../../tools/Palette/theme.dart' as custom_theme;
 
 class InfoTab extends StatefulWidget {
   const InfoTab({Key? key}) : super(key: key);
@@ -78,8 +79,13 @@ class _InfoTabState extends State<InfoTab> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Container(
-      color: Colors.white,
+      color: theme.brightness == Brightness.dark
+          ? colorScheme.background
+          : Colors.white,
       child: Stack(
         children: [
           // Main Content
@@ -138,6 +144,9 @@ class _InfoTabState extends State<InfoTab> {
   }
 
   Widget _buildFloatingTitle() {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Container(
       margin: const EdgeInsets.all(16),
       child: ClipRRect(
@@ -147,45 +156,47 @@ class _InfoTabState extends State<InfoTab> {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  const Color(0xFF2196F3).withOpacity(0.3),
-                  const Color(0xFF1976D2).withOpacity(0.4),
-                  const Color(0xFF1565C0).withOpacity(0.3),
-                ],
-              ),
+              color: theme.brightness == Brightness.dark
+                  ? Colors.grey[700]!.withOpacity(0.3)
+                  : custom_theme.light.shade100.withOpacity(0.3),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: const Color(0xFF42A5F5),
+                color: theme.brightness == Brightness.dark
+                    ? Colors.white
+                    : custom_theme.light.shade300,
                 width: 1,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFF2196F3).withOpacity(0.4),
+                  color: Colors.black.withOpacity(0.3),
                   spreadRadius: 0,
                   blurRadius: 20,
                   offset: const Offset(0, 8),
                 ),
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  spreadRadius: 0,
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
               ],
             ),
-            child: const Center(
-              child: Text(
-                'App Information',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                  fontFamily: 'Tajawal',
+            child: Row(
+              children: [
+                Icon(
+                  Icons.info,
+                  color: theme.brightness == Brightness.dark
+                      ? Colors.white
+                      : colorScheme.primary,
+                  size: 28,
                 ),
-              ),
+                const SizedBox(width: 12),
+                Text(
+                  'App Information',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: theme.brightness == Brightness.dark
+                        ? Colors.white
+                        : colorScheme.onSurface,
+                    fontFamily: 'Tajawal',
+                  ),
+                ),
+              ],
             ),
           ),
         ),
@@ -194,22 +205,34 @@ class _InfoTabState extends State<InfoTab> {
   }
 
   Widget _buildSettingsSection() {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.grey[50],
+        color: theme.brightness == Brightness.dark
+            ? colorScheme.surface
+            : Colors.grey[50],
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[200]!),
+        border: Border.all(
+          color: theme.brightness == Brightness.dark
+              ? Colors.white.withOpacity(0.2)
+              : Colors.grey[200]!,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Settings',
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
               fontFamily: 'Tajawal',
+              color: theme.brightness == Brightness.dark
+                  ? Colors.white
+                  : colorScheme.onSurface,
             ),
           ),
           const SizedBox(height: 12),
@@ -310,11 +333,16 @@ class _InfoTabState extends State<InfoTab> {
   }
 
   Widget _buildInfoCard(String title, String content, IconData icon) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.brightness == Brightness.dark
+            ? colorScheme.surface
+            : Colors.white,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
@@ -324,7 +352,11 @@ class _InfoTabState extends State<InfoTab> {
             offset: const Offset(0, 1),
           ),
         ],
-        border: Border.all(color: Colors.grey[200]!),
+        border: Border.all(
+          color: theme.brightness == Brightness.dark
+              ? Colors.white.withOpacity(0.2)
+              : Colors.grey[200]!,
+        ),
       ),
       child: Row(
         children: [
@@ -332,12 +364,16 @@ class _InfoTabState extends State<InfoTab> {
             width: 50,
             height: 50,
             decoration: BoxDecoration(
-              color: const Color(0xFF1976D2).withOpacity(0.1),
+              color: theme.brightness == Brightness.dark
+                  ? colorScheme.primary.withOpacity(0.1)
+                  : custom_theme.light.shade100,
               borderRadius: BorderRadius.circular(25),
             ),
             child: Icon(
               icon,
-              color: const Color(0xFF1976D2),
+              color: theme.brightness == Brightness.dark
+                  ? Colors.white
+                  : colorScheme.primary,
               size: 24,
             ),
           ),
@@ -348,10 +384,13 @@ class _InfoTabState extends State<InfoTab> {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                     fontFamily: 'Tajawal',
+                    color: theme.brightness == Brightness.dark
+                        ? Colors.white
+                        : colorScheme.onSurface,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -359,7 +398,9 @@ class _InfoTabState extends State<InfoTab> {
                   content,
                   style: TextStyle(
                     fontSize: 14,
-                    color: Colors.grey[600],
+                    color: theme.brightness == Brightness.dark
+                        ? Colors.white.withOpacity(0.7)
+                        : Colors.grey[600],
                     fontFamily: 'Tajawal',
                     height: 1.4,
                   ),
@@ -374,20 +415,32 @@ class _InfoTabState extends State<InfoTab> {
 
   Widget _buildSettingItem(
       String title, IconData icon, String value, VoidCallback onTap) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return InkWell(
       onTap: onTap,
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 8),
         child: Row(
           children: [
-            Icon(icon, color: Colors.grey[600], size: 20),
+            Icon(
+              icon,
+              color: theme.brightness == Brightness.dark
+                  ? Colors.white.withOpacity(0.7)
+                  : Colors.grey[600],
+              size: 20,
+            ),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
                 title,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 14,
                   fontFamily: 'Tajawal',
+                  color: theme.brightness == Brightness.dark
+                      ? Colors.white
+                      : colorScheme.onSurface,
                 ),
               ),
             ),
@@ -395,14 +448,18 @@ class _InfoTabState extends State<InfoTab> {
               value,
               style: TextStyle(
                 fontSize: 12,
-                color: Colors.grey[600],
+                color: theme.brightness == Brightness.dark
+                    ? Colors.white.withOpacity(0.7)
+                    : Colors.grey[600],
                 fontFamily: 'Tajawal',
               ),
             ),
             const SizedBox(width: 8),
             Icon(
               Icons.arrow_forward_ios,
-              color: Colors.grey[400],
+              color: theme.brightness == Brightness.dark
+                  ? Colors.white.withOpacity(0.5)
+                  : Colors.grey[400],
               size: 12,
             ),
           ],
@@ -413,25 +470,39 @@ class _InfoTabState extends State<InfoTab> {
 
   Widget _buildSettingItemWithSwitch(String title, IconData icon,
       bool isEnabled, ValueChanged<bool> onChanged) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         children: [
-          Icon(icon, color: Colors.grey[600], size: 20),
+          Icon(
+            icon,
+            color: theme.brightness == Brightness.dark
+                ? Colors.white.withOpacity(0.7)
+                : Colors.grey[600],
+            size: 20,
+          ),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
               title,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
                 fontFamily: 'Tajawal',
+                color: theme.brightness == Brightness.dark
+                    ? Colors.white
+                    : colorScheme.onSurface,
               ),
             ),
           ),
           Switch(
             value: isEnabled,
             onChanged: onChanged,
-            activeColor: const Color(0xFF1976D2),
+            activeColor: theme.brightness == Brightness.dark
+                ? Colors.white
+                : colorScheme.primary,
           ),
         ],
       ),

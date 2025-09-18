@@ -6,6 +6,13 @@ import 'modern_dialog_base.dart';
 class AddCarDialog extends StatelessWidget {
   const AddCarDialog({Key? key}) : super(key: key);
 
+  static void show(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => const AddCarDialog(),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return ModernDialogBase(

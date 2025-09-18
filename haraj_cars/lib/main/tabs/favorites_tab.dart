@@ -204,18 +204,28 @@ class _FavoritesTabState extends State<FavoritesTab>
                 ),
               ],
             ),
-            child: Center(
-              child: Text(
-                'Your Favorites',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
+            child: Row(
+              children: [
+                Icon(
+                  Icons.favorite,
                   color: theme.brightness == Brightness.dark
                       ? Colors.white
-                      : colorScheme.onSurface,
-                  fontFamily: 'Tajawal',
+                      : colorScheme.primary,
+                  size: 28,
                 ),
-              ),
+                const SizedBox(width: 12),
+                Text(
+                  'Your Favorites',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: theme.brightness == Brightness.dark
+                        ? Colors.white
+                        : colorScheme.onSurface,
+                    fontFamily: 'Tajawal',
+                  ),
+                ),
+              ],
             ),
           ),
         ),
