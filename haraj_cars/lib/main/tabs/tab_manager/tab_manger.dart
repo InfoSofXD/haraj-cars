@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:haraj/widgets/side_menu.dart';
 import 'dart:ui';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../models/car.dart';
@@ -71,7 +72,7 @@ class _TabMangerScreenState extends State<TabMangerScreen>
   @override
   void initState() {
     super.initState();
-    
+
     // Initialize authentication
     _initializeAuth();
 
@@ -438,6 +439,21 @@ class _TabMangerScreenState extends State<TabMangerScreen>
 
   @override
   Widget build(BuildContext context) {
+    return SideMenu(
+      currentIndex: _currentIndex,
+      isAdmin: _isAdmin,
+      onTabTapped: (index) {
+        _pageController.animateToPage(
+          index,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+        );
+      },
+      child: _buildMainContent(),
+    );
+  }
+
+  Widget _buildMainContent() {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
@@ -485,7 +501,7 @@ class _TabMangerScreenState extends State<TabMangerScreen>
                             onShowCarDetails: _showCarDetails,
                             onShowStatusUpdate: _showStatusUpdateDialog,
                           ),
-                        
+
                         // For Admin/Worker: Cars tab is second
                         // For Guest/Client: Dashboard is second (if authenticated)
                         if (_authService.isAdmin)
@@ -627,17 +643,40 @@ class _TabMangerScreenState extends State<TabMangerScreen>
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              'HARAJ . OHIO',
-              style: TextStyle(
-                color: theme.brightness == Brightness.dark
-                    ? Colors.white
-                    : colorScheme.onSurface,
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                fontFamily: 'Tajawal',
-                letterSpacing: 1.2,
-              ),
+            Row(
+              children: [
+                // Hamburger menu button
+                GestureDetector(
+                  onTap: _toggleDrawer,
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: colorScheme.onPrimary.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      Icons.menu,
+                      color: theme.brightness == Brightness.dark
+                          ? Colors.white
+                          : colorScheme.onSurface,
+                      size: 20,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  'HARAJ . OHIO',
+                  style: TextStyle(
+                    color: theme.brightness == Brightness.dark
+                        ? Colors.white
+                        : colorScheme.onSurface,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    fontFamily: 'Tajawal',
+                    letterSpacing: 1.2,
+                  ),
+                ),
+              ],
             ),
             Row(
               children: [
@@ -1606,5 +1645,9 @@ class _TabMangerScreenState extends State<TabMangerScreen>
 
   void _showContactDialog() {
     ContactDialog.show(context);
+  }
+
+  void _toggleDrawer() {
+    SideMenu.toggle(context);
   }
 }

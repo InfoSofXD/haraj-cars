@@ -341,6 +341,14 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  flutter_zoom_drawer:
+    dependency: "direct main"
+    description:
+      name: flutter_zoom_drawer
+      sha256: b6089fd343ded02550f2eee70af413efdc6dcb15116a25fc375d0e8d98744891
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.0.0"
   functions_client:
     dependency: transitive
     description:

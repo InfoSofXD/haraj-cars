@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:haraj/main/tabs/favorits_tab/favorites_service.dart';
 import 'dart:ui';
 import '../../../../models/car.dart';
-import 'favorites_service.dart';
 import '../../../../main/tabs/cars_cards_tab/ui/car_card.dart';
 import '../../../../../tools/Palette/theme.dart' as custom_theme;
 
