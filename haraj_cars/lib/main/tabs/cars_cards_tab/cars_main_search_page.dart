@@ -7,6 +7,7 @@ import '../../../../tools/connectivity.dart';
 import 'ui/car_card.dart';
 import '../../../../tools/Palette/theme.dart' as custom_theme;
 import '../../../tools/dialogs/dialogs.dart';
+import '../../../features/logger/data/providers/logger_provider.dart';
 
 class CarsTab extends StatefulWidget {
   final bool isAdmin;
@@ -104,6 +105,17 @@ class _CarsTabState extends State<CarsTab> {
         _isLoading = false;
       });
       _calculateDynamicRanges();
+      
+      // Log car viewing action
+      await LoggerProvider.instance.logCarAction(
+        action: LogAction.carViewed,
+        message: 'Viewed ${cars.length} cars',
+        metadata: {
+          'car_count': cars.length,
+          'auction_cars': cars.where((car) => car.status == 3).length,
+          'is_admin': widget.isAdmin,
+        },
+      );
     } catch (e) {
       setState(() {
         _isLoading = false;

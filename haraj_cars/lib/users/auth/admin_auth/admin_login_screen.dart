@@ -3,6 +3,8 @@ import '../../../../core/services/auth_service.dart';
 import '../../../../core/navigation/app_router.dart';
 import '../role_selection_screen.dart';
 import '../../admin_side/admin_worker_dashboard/admin_dashboard_layout.dart';
+import '../../../features/logger/data/providers/logger_provider.dart';
+import '../../../features/logger/domain/models/log_entry.dart';
 
 class AdminLoginScreen extends StatefulWidget {
   const AdminLoginScreen({Key? key}) : super(key: key);
@@ -46,6 +48,18 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
       if (result.isSuccess && result.data != null) {
         // Check if user is admin/worker
         if (result.data!.isAdmin) {
+          // Log admin login
+          await LoggerProvider.instance.logUserAction(
+            action: LogAction.userLoggedIn,
+            message: 'Admin logged in successfully',
+            userId: result.data!.id,
+            metadata: {
+              'admin_name': result.data!.fullName ?? _usernameController.text,
+              'admin_role': result.data!.role.displayName,
+              'login_method': 'username',
+            },
+          );
+          
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Welcome back, ${result.data!.fullName ?? _usernameController.text}!'),

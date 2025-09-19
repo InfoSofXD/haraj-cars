@@ -4,6 +4,8 @@ import 'dashboard_tab.dart';
 import 'workers_management_screen.dart';
 import '../../../main/tabs/cars_cards_tab/cars_main_search_page.dart';
 import '../user_management_screen.dart';
+import '../../../features/logger/presentation/pages/logs_page.dart';
+import '../../../features/logger/data/providers/logger_provider.dart';
 
 class AdminDashboardLayout extends StatefulWidget {
   const AdminDashboardLayout({Key? key}) : super(key: key);
@@ -57,6 +59,8 @@ class _AdminDashboardLayoutState extends State<AdminDashboardLayout> {
         return _buildClientsManagementContent();
       case 4:
         return _buildAnalyticsContent();
+      case 5:
+        return _buildLogsContent();
       default:
         return _buildHomeContent();
     }
@@ -161,6 +165,12 @@ class _AdminDashboardLayoutState extends State<AdminDashboardLayout> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildLogsContent() {
+    return LogsPage(
+      loggerService: LoggerProvider.instance,
     );
   }
 

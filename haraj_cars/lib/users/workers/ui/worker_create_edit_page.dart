@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../data/worker_model.dart';
+import '../../../features/logger/data/providers/logger_provider.dart';
+import '../../../features/logger/domain/models/log_entry.dart';
 
 class WorkerCreateEditPage extends StatefulWidget {
   final Worker? worker; // null for create, Worker object for edit
@@ -74,7 +76,7 @@ class _WorkerCreateEditPageState extends State<WorkerCreateEditPage> {
     super.dispose();
   }
 
-  void _saveWorker() {
+  void _saveWorker() async {
     if (!_formKey.currentState!.validate()) return;
 
     final worker = Worker(
@@ -86,6 +88,23 @@ class _WorkerCreateEditPageState extends State<WorkerCreateEditPage> {
       joinDate: widget.worker?.joinDate ?? DateTime.now(),
       isActive: _isActive,
       permissions: _selectedPermissions,
+    );
+
+    // Log worker action
+    final isEdit = widget.worker != null;
+    await LoggerProvider.instance.logWorkerAction(
+      action: isEdit ? LogAction.workerUpdated : LogAction.workerCreated,
+      message: isEdit 
+          ? 'Updated worker: ${worker.name}'
+          : 'Created new worker: ${worker.name}',
+      workerId: worker.id,
+      metadata: {
+        'worker_name': worker.name,
+        'worker_email': worker.email,
+        'worker_position': worker.position,
+        'worker_permissions': worker.permissions,
+        'worker_active': worker.isActive,
+      },
     );
 
     widget.onSave?.call(worker);

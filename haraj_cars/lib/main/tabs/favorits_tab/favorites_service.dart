@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../models/car.dart';
+import '../../../features/logger/data/providers/logger_provider.dart';
+import '../../../features/logger/domain/models/log_entry.dart';
 
 class FavoritesService {
   static const String _favoritesKey = 'favorite_cars';
@@ -27,7 +29,24 @@ class FavoritesService {
       // Check if car is already in favorites
       if (!favorites.any((favCar) => favCar.carId == car.carId)) {
         favorites.add(car);
-        return await _saveFavorites(favorites);
+        final success = await _saveFavorites(favorites);
+        
+        // Log favorite action
+        if (success) {
+          await LoggerProvider.instance.logFavoriteAction(
+            action: LogAction.favoriteAdded,
+            message: 'Added car to favorites: ${car.brand} ${car.model}',
+            carId: car.carId,
+            metadata: {
+              'car_brand': car.brand,
+              'car_model': car.model,
+              'car_year': car.year,
+              'car_price': car.price,
+            },
+          );
+        }
+        
+        return success;
       }
       return true; // Already in favorites
     } catch (e) {
@@ -40,8 +59,52 @@ class FavoritesService {
   Future<bool> removeFromFavorites(String carId) async {
     try {
       final favorites = await getFavoriteCars();
+      final carToRemove = favorites.firstWhere(
+        (car) => car.carId == carId,
+        orElse: () => Car(
+          carId: carId,
+          description: '',
+          price: 0,
+          brand: '',
+          model: '',
+          year: 0,
+          mileage: 0,
+          transmission: '',
+          fuelType: '',
+          engineSize: '',
+          horsepower: 0,
+          driveType: '',
+          exteriorColor: '',
+          interiorColor: '',
+          doors: 0,
+          seats: 0,
+          contact: '',
+          vin: '',
+          status: 1,
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        ),
+      );
+      
       favorites.removeWhere((car) => car.carId == carId);
-      return await _saveFavorites(favorites);
+      final success = await _saveFavorites(favorites);
+      
+      // Log favorite removal action
+      if (success) {
+        await LoggerProvider.instance.logFavoriteAction(
+          action: LogAction.favoriteRemoved,
+          message: 'Removed car from favorites: ${carToRemove.brand} ${carToRemove.model}',
+          carId: carId,
+          metadata: {
+            'car_brand': carToRemove.brand,
+            'car_model': carToRemove.model,
+            'car_year': carToRemove.year,
+            'car_price': carToRemove.price,
+          },
+        );
+      }
+      
+      return success;
     } catch (e) {
       print('Error removing from favorites: $e');
       return false;

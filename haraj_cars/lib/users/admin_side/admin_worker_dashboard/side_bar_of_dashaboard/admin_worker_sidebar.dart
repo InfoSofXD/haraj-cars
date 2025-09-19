@@ -161,6 +161,12 @@ class _AdminWorkerSidebarState extends State<AdminWorkerSidebar> {
         subtitle: 'View reports & insights',
         index: 4,
       ),
+      _NavigationItem(
+        icon: Icons.description,
+        title: 'System Logs',
+        subtitle: 'Track all system actions',
+        index: 5,
+      ),
     ];
 
     return ListView.builder(
