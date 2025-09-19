@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'supabase/supabase_config.dart';
-import 'auth/intro.dart';
+import 'splash_screen/intro.dart';
 import 'tools/theme_controller.dart';
 import 'tools/Palette/theme.dart' as custom_theme;
+import 'core/services/auth_service.dart';
+import 'core/navigation/app_router.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -16,6 +18,10 @@ void main() async {
 
   // Preload theme from shared preferences before running the app
   await ThemeController.instance.loadFromPrefs();
+  
+  // Initialize auth service
+  await AuthService().initializeAuth();
+  
   runApp(const MainApp());
 }
 
@@ -93,7 +99,8 @@ class _MainAppState extends State<MainApp> {
         fontFamily: 'Tajawal',
         useMaterial3: false,
       ),
-      home: const IntroScreen(),
+      initialRoute: '/',
+      onGenerateRoute: AppRouter.generateRoute,
       debugShowCheckedModeBanner: false,
     );
   }

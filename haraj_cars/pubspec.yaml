@@ -20,6 +20,7 @@ dependencies:
   # Tools
   uuid: ^4.2.2
   shared_preferences: ^2.2.2
+  get_it: ^7.6.4
 
   # Media & Files
   image_picker: ^1.0.7
@@ -35,11 +36,14 @@ dependencies:
   intl: ^0.18.1
   geolocator: ^10.1.0
   geocoding: ^2.1.0
+  flutter_bloc: ^9.1.1
 
   # Languages
+  
   flutter_localizations:
     sdk: flutter
   easy_localization: ^3.0.7+1
+
 
   # App Appearance
   flutter_native_splash: ^2.3.3
