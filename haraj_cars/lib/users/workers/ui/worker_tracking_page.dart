@@ -47,24 +47,24 @@ class _WorkerTrackingPageState extends State<WorkerTrackingPage>
     // Mock data
     _workers = [
       Worker(
-        id: '1',
-        name: 'John Smith',
-        email: 'john@example.com',
-        phone: '+1234567890',
-        position: 'Sales Representative',
-        joinDate: DateTime.now().subtract(const Duration(days: 30)),
-        isActive: true,
-        permissions: ['view_cars', 'add_cars'],
+        id: 1,
+        createdAt: DateTime.now().subtract(const Duration(days: 30)),
+        workerName: 'John Smith',
+        workerPhone: '+1234567890',
+        workerEmail: 'john@example.com',
+        lastLogin: DateTime.now().subtract(const Duration(hours: 2)),
+        workerUuid: 'uuid-1',
+        workerPassword: 'password123',
       ),
       Worker(
-        id: '2',
-        name: 'Sarah Johnson',
-        email: 'sarah@example.com',
-        phone: '+1234567891',
-        position: 'Marketing Specialist',
-        joinDate: DateTime.now().subtract(const Duration(days: 15)),
-        isActive: true,
-        permissions: ['view_cars', 'add_cars', 'edit_cars'],
+        id: 2,
+        createdAt: DateTime.now().subtract(const Duration(days: 15)),
+        workerName: 'Sarah Johnson',
+        workerPhone: '+1234567891',
+        workerEmail: 'sarah@example.com',
+        lastLogin: DateTime.now().subtract(const Duration(hours: 4)),
+        workerUuid: 'uuid-2',
+        workerPassword: 'password456',
       ),
     ];
 
@@ -179,7 +179,7 @@ class _WorkerTrackingPageState extends State<WorkerTrackingPage>
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.worker != null 
-            ? '${widget.worker!.name} - Activity' 
+            ? '${widget.worker!.workerName} - Activity' 
             : 'Worker Activity Tracking'),
         backgroundColor: colorScheme.primary,
         foregroundColor: Colors.white,
@@ -298,14 +298,14 @@ class _WorkerTrackingPageState extends State<WorkerTrackingPage>
                     final worker = _workers.firstWhere(
                       (w) => w.id == action.workerId,
                       orElse: () => Worker(
-                        id: action.workerId,
-                        name: 'Unknown Worker',
-                        email: '',
-                        phone: '',
-                        position: '',
-                        joinDate: DateTime.now(),
-                        isActive: false,
-                        permissions: [],
+                        id: int.tryParse(action.workerId) ?? 0,
+                        createdAt: DateTime.now(),
+                        workerName: 'Unknown Worker',
+                        workerPhone: '',
+                        workerEmail: '',
+                        lastLogin: null,
+                        workerUuid: null,
+                        workerPassword: null,
                       ),
                     );
 
@@ -337,7 +337,7 @@ class _WorkerTrackingPageState extends State<WorkerTrackingPage>
                         subtitle: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('By: ${worker.name}'),
+                            Text('By: ${worker.workerName}'),
                             Text(
                               _formatTimestamp(action.timestamp),
                               style: TextStyle(
@@ -391,7 +391,7 @@ class _WorkerTrackingPageState extends State<WorkerTrackingPage>
               Expanded(
                 child: _buildStatCard(
                   'Active Workers',
-                  '${_workers.where((w) => w.isActive).length}',
+                  '${_workers.where((w) => w.lastLogin != null).length}',
                   Icons.people,
                   Colors.green,
                 ),
@@ -510,9 +510,9 @@ class _WorkerTrackingPageState extends State<WorkerTrackingPage>
                   ),
                   child: ListTile(
                     leading: CircleAvatar(
-                      backgroundColor: worker.isActive ? Colors.green : Colors.grey,
+                      backgroundColor: worker.lastLogin != null ? Colors.green : Colors.grey,
                       child: Text(
-                        worker.name[0].toUpperCase(),
+                        worker.workerName[0].toUpperCase(),
                         style: const TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
@@ -520,13 +520,13 @@ class _WorkerTrackingPageState extends State<WorkerTrackingPage>
                       ),
                     ),
                     title: Text(
-                      worker.name,
+                      worker.workerName,
                       style: const TextStyle(fontWeight: FontWeight.w500),
                     ),
                     subtitle: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(worker.position),
+                        Text(worker.workerPhone),
                         Text(
                           '$workerActions actions performed',
                           style: TextStyle(
@@ -542,14 +542,14 @@ class _WorkerTrackingPageState extends State<WorkerTrackingPage>
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
-                            color: worker.isActive ? Colors.green.withOpacity(0.1) : Colors.grey.withOpacity(0.1),
+                            color: worker.lastLogin != null ? Colors.green.withOpacity(0.1) : Colors.grey.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
-                            worker.isActive ? 'Active' : 'Inactive',
+                            worker.lastLogin != null ? 'Active' : 'Inactive',
                             style: TextStyle(
                               fontSize: 10,
-                              color: worker.isActive ? Colors.green : Colors.grey,
+                              color: worker.lastLogin != null ? Colors.green : Colors.grey,
                               fontWeight: FontWeight.w500,
                             ),
                           ),

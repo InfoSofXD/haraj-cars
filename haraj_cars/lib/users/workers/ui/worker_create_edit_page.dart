@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../data/worker_model.dart';
+import '../data/worker_service.dart';
 import '../../../features/logger/data/providers/logger_provider.dart';
 import '../../../features/logger/domain/models/log_entry.dart';
 
@@ -22,31 +23,11 @@ class _WorkerCreateEditPageState extends State<WorkerCreateEditPage> {
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
-  final _positionController = TextEditingController();
+  final _passwordController = TextEditingController();
 
-  String _selectedPosition = 'Sales Representative';
-  bool _isActive = true;
-  List<String> _selectedPermissions = ['view_cars', 'add_cars'];
+  final WorkerService _workerService = WorkerService();
+  bool _isLoading = false;
 
-  final List<String> _positions = [
-    'Sales Representative',
-    'Marketing Specialist',
-    'Customer Service',
-    'Data Entry Clerk',
-    'Manager',
-    'Supervisor',
-  ];
-
-  final List<String> _availablePermissions = [
-    'view_cars',
-    'add_cars',
-    'edit_cars',
-    'delete_cars',
-    'view_users',
-    'manage_users',
-    'view_reports',
-    'manage_settings',
-  ];
 
   @override
   void initState() {
@@ -58,13 +39,10 @@ class _WorkerCreateEditPageState extends State<WorkerCreateEditPage> {
 
   void _populateFields() {
     final worker = widget.worker!;
-    _nameController.text = worker.name;
-    _emailController.text = worker.email;
-    _phoneController.text = worker.phone;
-    _positionController.text = worker.position;
-    _selectedPosition = worker.position;
-    _isActive = worker.isActive;
-    _selectedPermissions = List.from(worker.permissions);
+    _nameController.text = worker.workerName;
+    _emailController.text = worker.workerEmail ?? '';
+    _phoneController.text = worker.workerPhone;
+    _passwordController.text = worker.workerPassword ?? '';
   }
 
   @override
@@ -72,43 +50,76 @@ class _WorkerCreateEditPageState extends State<WorkerCreateEditPage> {
     _nameController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
-    _positionController.dispose();
+    _passwordController.dispose();
     super.dispose();
   }
 
   void _saveWorker() async {
     if (!_formKey.currentState!.validate()) return;
 
-    final worker = Worker(
-      id: widget.worker?.id ?? DateTime.now().millisecondsSinceEpoch.toString(),
-      name: _nameController.text.trim(),
-      email: _emailController.text.trim(),
-      phone: _phoneController.text.trim(),
-      position: _selectedPosition,
-      joinDate: widget.worker?.joinDate ?? DateTime.now(),
-      isActive: _isActive,
-      permissions: _selectedPermissions,
-    );
+    setState(() {
+      _isLoading = true;
+    });
 
-    // Log worker action
-    final isEdit = widget.worker != null;
-    await LoggerProvider.instance.logWorkerAction(
-      action: isEdit ? LogAction.workerUpdated : LogAction.workerCreated,
-      message: isEdit 
-          ? 'Updated worker: ${worker.name}'
-          : 'Created new worker: ${worker.name}',
-      workerId: worker.id,
-      metadata: {
-        'worker_name': worker.name,
-        'worker_email': worker.email,
-        'worker_position': worker.position,
-        'worker_permissions': worker.permissions,
-        'worker_active': worker.isActive,
-      },
-    );
+    try {
+      final isEdit = widget.worker != null;
+      Worker? savedWorker;
 
-    widget.onSave?.call(worker);
-    Navigator.of(context).pop();
+      if (isEdit) {
+        // Update existing worker
+        final updatedWorker = widget.worker!.copyWith(
+          workerName: _nameController.text.trim(),
+          workerPhone: _phoneController.text.trim(),
+          workerEmail: _emailController.text.trim().isEmpty ? null : _emailController.text.trim(),
+          workerPassword: _passwordController.text.trim().isEmpty ? null : _passwordController.text.trim(),
+        );
+        savedWorker = await _workerService.updateWorker(updatedWorker);
+      } else {
+        // Create new worker
+        savedWorker = await _workerService.createWorker(
+          workerName: _nameController.text.trim(),
+          workerPhone: _phoneController.text.trim(),
+          workerEmail: _emailController.text.trim().isEmpty ? null : _emailController.text.trim(),
+          workerPassword: _passwordController.text.trim().isEmpty ? null : _passwordController.text.trim(),
+        );
+      }
+
+      if (savedWorker != null) {
+        // Log worker action
+        await LoggerProvider.instance.logWorkerAction(
+          action: isEdit ? LogAction.workerUpdated : LogAction.workerCreated,
+          message: isEdit 
+              ? 'Updated worker: ${savedWorker.workerName}'
+              : 'Created new worker: ${savedWorker.workerName}',
+          workerId: savedWorker.id.toString(),
+          metadata: {
+            'worker_name': savedWorker.workerName,
+            'worker_email': savedWorker.workerEmail,
+            'worker_phone': savedWorker.workerPhone,
+          },
+        );
+
+        widget.onSave?.call(savedWorker);
+        Navigator.of(context).pop();
+      } else {
+        _showErrorSnackBar('Failed to ${isEdit ? 'update' : 'create'} worker');
+      }
+    } catch (e) {
+      _showErrorSnackBar('Error: $e');
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  void _showErrorSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red,
+      ),
+    );
   }
 
   @override
@@ -201,7 +212,7 @@ class _WorkerCreateEditPageState extends State<WorkerCreateEditPage> {
                     TextFormField(
                       controller: _nameController,
                       decoration: InputDecoration(
-                        labelText: 'Full Name',
+                        labelText: 'Worker Name',
                         prefixIcon: const Icon(Icons.person_outline),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -212,31 +223,6 @@ class _WorkerCreateEditPageState extends State<WorkerCreateEditPage> {
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'Please enter worker name';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Email Field
-                    TextFormField(
-                      controller: _emailController,
-                      keyboardType: TextInputType.emailAddress,
-                      decoration: InputDecoration(
-                        labelText: 'Email Address',
-                        prefixIcon: const Icon(Icons.email_outlined),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        filled: true,
-                        fillColor: colorScheme.surface,
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter email address';
-                        }
-                        if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
-                          return 'Please enter a valid email';
                         }
                         return null;
                       },
@@ -263,136 +249,44 @@ class _WorkerCreateEditPageState extends State<WorkerCreateEditPage> {
                         return null;
                       },
                     ),
-                    const SizedBox(height: 32),
-
-                    // Work Information Section
-                    _buildSectionHeader('Work Information', Icons.work),
                     const SizedBox(height: 16),
 
-                    // Position Dropdown
-                    DropdownButtonFormField<String>(
-                      value: _selectedPosition,
+                    // Email Field
+                    TextFormField(
+                      controller: _emailController,
+                      keyboardType: TextInputType.emailAddress,
                       decoration: InputDecoration(
-                        labelText: 'Position',
-                        prefixIcon: const Icon(Icons.work_outline),
+                        labelText: 'Email Address (Optional)',
+                        prefixIcon: const Icon(Icons.email_outlined),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
                         filled: true,
                         fillColor: colorScheme.surface,
                       ),
-                      items: _positions.map((position) {
-                        return DropdownMenuItem(
-                          value: position,
-                          child: Text(position),
-                        );
-                      }).toList(),
-                      onChanged: (value) {
-                        setState(() {
-                          _selectedPosition = value!;
-                        });
+                      validator: (value) {
+                        if (value != null && value.isNotEmpty) {
+                          if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
+                            return 'Please enter a valid email';
+                          }
+                        }
+                        return null;
                       },
                     ),
                     const SizedBox(height: 16),
 
-                    // Active Status Switch
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: colorScheme.surface,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: colorScheme.outline.withOpacity(0.2),
+                    // Password Field
+                    TextFormField(
+                      controller: _passwordController,
+                      obscureText: true,
+                      decoration: InputDecoration(
+                        labelText: 'Password (Optional)',
+                        prefixIcon: const Icon(Icons.lock_outline),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.toggle_on,
-                            color: _isActive ? Colors.green : Colors.grey,
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Active Status',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w500,
-                                    color: colorScheme.onSurface,
-                                  ),
-                                ),
-                                Text(
-                                  _isActive ? 'Worker is active' : 'Worker is inactive',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: colorScheme.onSurface.withOpacity(0.7),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Switch(
-                            value: _isActive,
-                            onChanged: (value) {
-                              setState(() {
-                                _isActive = value;
-                              });
-                            },
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 32),
-
-                    // Permissions Section
-                    _buildSectionHeader('Permissions', Icons.security),
-                    const SizedBox(height: 16),
-
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: colorScheme.surface,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: colorScheme.outline.withOpacity(0.2),
-                        ),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Select Permissions',
-                            style: TextStyle(
-                              fontWeight: FontWeight.w500,
-                              color: colorScheme.onSurface,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          Wrap(
-                            spacing: 8,
-                            runSpacing: 8,
-                            children: _availablePermissions.map((permission) {
-                              final isSelected = _selectedPermissions.contains(permission);
-                              return FilterChip(
-                                label: Text(_getPermissionDisplayName(permission)),
-                                selected: isSelected,
-                                onSelected: (selected) {
-                                  setState(() {
-                                    if (selected) {
-                                      _selectedPermissions.add(permission);
-                                    } else {
-                                      _selectedPermissions.remove(permission);
-                                    }
-                                  });
-                                },
-                                selectedColor: Colors.blue.withOpacity(0.2),
-                                checkmarkColor: Colors.blue,
-                              );
-                            }).toList(),
-                          ),
-                        ],
+                        filled: true,
+                        fillColor: colorScheme.surface,
                       ),
                     ),
                     const SizedBox(height: 32),
@@ -415,7 +309,7 @@ class _WorkerCreateEditPageState extends State<WorkerCreateEditPage> {
                         const SizedBox(width: 16),
                         Expanded(
                           child: ElevatedButton(
-                            onPressed: _saveWorker,
+                            onPressed: _isLoading ? null : _saveWorker,
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.blue,
                               foregroundColor: Colors.white,
@@ -424,7 +318,18 @@ class _WorkerCreateEditPageState extends State<WorkerCreateEditPage> {
                                 borderRadius: BorderRadius.circular(12),
                               ),
                             ),
-                            child: Text(isEdit ? 'Update Worker' : 'Create Worker'),
+                            child: _isLoading
+                                ? const SizedBox(
+                                    height: 20,
+                                    width: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        Colors.white,
+                                      ),
+                                    ),
+                                  )
+                                : Text(isEdit ? 'Update Worker' : 'Create Worker'),
                           ),
                         ),
                       ],
@@ -460,26 +365,4 @@ class _WorkerCreateEditPageState extends State<WorkerCreateEditPage> {
     );
   }
 
-  String _getPermissionDisplayName(String permission) {
-    switch (permission) {
-      case 'view_cars':
-        return 'View Cars';
-      case 'add_cars':
-        return 'Add Cars';
-      case 'edit_cars':
-        return 'Edit Cars';
-      case 'delete_cars':
-        return 'Delete Cars';
-      case 'view_users':
-        return 'View Users';
-      case 'manage_users':
-        return 'Manage Users';
-      case 'view_reports':
-        return 'View Reports';
-      case 'manage_settings':
-        return 'Manage Settings';
-      default:
-        return permission;
-    }
-  }
 }

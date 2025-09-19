@@ -66,14 +66,26 @@ class RoleSelectionScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 60),
 
-                  // Admin/Worker Option
+                  // Admin Option
                   _buildRoleCard(
                     context: context,
-                    title: 'Admin / Worker',
+                    title: 'Admin',
                     subtitle: 'Login to manage cars, users, and system',
                     icon: Icons.admin_panel_settings,
                     color: Colors.red,
                     onTap: () => AppRouter.navigateToAdminLogin(context),
+                  ),
+                  
+                  const SizedBox(height: 24),
+
+                  // Worker Option
+                  _buildRoleCard(
+                    context: context,
+                    title: 'Worker',
+                    subtitle: 'Login to manage cars and assist customers',
+                    icon: Icons.work_outline,
+                    color: Colors.orange,
+                    onTap: () => AppRouter.navigateToWorkerLogin(context),
                   ),
                   
                   const SizedBox(height: 24),
@@ -109,6 +121,29 @@ class RoleSelectionScreen extends StatelessWidget {
                       ),
                     ),
                   ),
+                  
+                  const SizedBox(height: 16),
+                  
+                  // Debug Helper (only show in debug mode)
+                  if (const bool.fromEnvironment('dart.vm.product') == false)
+                    TextButton(
+                      onPressed: () => AppRouter.navigateToWorkerDebug(context),
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 32,
+                          vertical: 16,
+                        ),
+                      ),
+                      child: Text(
+                        'Worker Debug Helper',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.yellow.withOpacity(0.9),
+                          fontFamily: 'Tajawal',
+                          decoration: TextDecoration.underline,
+                        ),
+                      ),
+                    ),
                   
                   const SizedBox(height: 20),
                 ],

@@ -9,6 +9,8 @@ import '../../users/auth/admin_auth/admin_register_screen.dart';
 import '../../users/auth/client_auth/client_login_screen.dart';
 import '../../users/auth/client_auth/client_register_screen.dart';
 import '../../users/auth/role_selection_screen.dart';
+import '../../users/workers/ui/worker_login_screen.dart';
+import '../../users/workers/ui/worker_debug_screen.dart';
 import '../../splash_screen/intro.dart';
 
 class AppRouter {
@@ -25,6 +27,10 @@ class AppRouter {
   // New client auth routes
   static const String clientLogin = '/client_login_register';
   static const String clientRegister = '/client_login_register/register';
+  
+  // Worker auth routes
+  static const String workerLogin = '/worker_login';
+  static const String workerDebug = '/worker_debug';
 
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
@@ -81,6 +87,19 @@ class AppRouter {
       case clientRegister:
         return MaterialPageRoute(
           builder: (_) => const ClientRegisterScreen(),
+          settings: settings,
+        );
+      
+      // Worker auth routes
+      case workerLogin:
+        return MaterialPageRoute(
+          builder: (_) => const WorkerLoginScreen(),
+          settings: settings,
+        );
+      
+      case workerDebug:
+        return MaterialPageRoute(
+          builder: (_) => const WorkerDebugScreen(),
           settings: settings,
         );
       
@@ -154,6 +173,21 @@ class AppRouter {
     );
   }
 
+  // Worker auth navigation methods
+  static void navigateToWorkerLogin(BuildContext context) {
+    Navigator.of(context).pushNamedAndRemoveUntil(
+      workerLogin,
+      (route) => false,
+    );
+  }
+
+  static void navigateToWorkerDebug(BuildContext context) {
+    Navigator.of(context).pushNamedAndRemoveUntil(
+      workerDebug,
+      (route) => false,
+    );
+  }
+
   // Route handling based on URL paths
   static void handleRoute(BuildContext context, String route) {
     switch (route) {
@@ -168,6 +202,9 @@ class AppRouter {
         break;
       case clientRegister:
         navigateToClientRegister(context);
+        break;
+      case workerLogin:
+        navigateToWorkerLogin(context);
         break;
       case roleSelection:
         navigateToRoleSelection(context);

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:haraj/features/logger/domain/models/log_entry.dart';
 import 'dart:ui';
 import '../../../models/car.dart';
 import '../../../../supabase/supabase_service.dart';
