@@ -3,18 +3,18 @@ import 'package:flutter/material.dart';
 
 // light
 const MaterialColor light = MaterialColor(_lightPrimaryValue, <int, Color>{
-  50: Color(0xFFE6EAF2),
-  100: Color(0xFFB3C6DE),
-  200: Color(0xFF809FC8),
-  300: Color(0xFF4D78B2),
-  400: Color(0xFF265B9F),
+  50: Color(0xFFE6F3ED),
+  100: Color(0xFFB8E0D0),
+  200: Color(0xFF8ACCB1),
+  300: Color(0xFF5CB892),
+  400: Color(0xFF39A97B),
   500: Color(_lightPrimaryValue),
-  600: Color(0xFF002460),
-  700: Color(0xFF001E54),
-  800: Color(0xFF001848),
-  900: Color(0xFF001033),
+  600: Color(0xFF226B51),
+  700: Color(0xFF1C5B46),
+  800: Color(0xFF164B3B),
+  900: Color(0xFF0D3228),
 });
-const int _lightPrimaryValue = 0xFF002868;
+const int _lightPrimaryValue = 0xFF26725A;
 
 // dark
 const MaterialColor dark = MaterialColor(_darkPrimaryValue, <int, Color>{

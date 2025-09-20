@@ -1,32 +1,72 @@
+import 'dart:async';
+import 'dart:io';
+import 'dart:ui' as ui;
+
+import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import 'supabase/supabase_config.dart';
-import 'splash_screen/intro.dart';
+import 'package:haraj/main/tab_manger.dart';
+import 'package:haraj/tools/app_initialization.dart';
+import 'package:haraj/tools/language/app_localizations.dart';
+import 'package:haraj/tools/language/language_provider.dart';
+import 'package:haraj/tools/splash_screen.dart';
+import 'package:haraj/tools/window_frame.dart';
+import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'auth/intro.dart';
 import 'tools/theme_controller.dart';
 import 'tools/Palette/theme.dart' as custom_theme;
-import 'core/services/auth_service.dart';
-import 'core/navigation/app_router.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+  // Initialize app
+  await AppInitialization.initializeApp();
 
-  // Initialize Supabase
-  await Supabase.initialize(
-    url: SupabaseConfig.url,
-    anonKey: SupabaseConfig.anonKey,
+  // Initialize translations
+  await EasyLocalization.ensureInitialized();
+
+  // Language Provider
+  final languageProvider = LanguageProvider();
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    final String? savedLanguage = prefs.getString('languageA');
+    if (savedLanguage != null) {
+      languageProvider.setLanguage(savedLanguage);
+    }
+  } catch (e) {
+    print('Error loading language preferences: $e');
+  }
+
+  // Completer
+  final completer = Completer<void>();
+
+  runApp(
+    EasyLocalization(
+      supportedLocales: const [
+        Locale('ar'),
+        Locale('en'),
+      ],
+      path: 'assets/langs',
+      fallbackLocale: const Locale('en'),
+      useOnlyLangCode: true,
+      child: ChangeNotifierProvider<LanguageProvider>(
+        create: (_) => languageProvider,
+        child: MainApp(onFirstFrameRendered: () {
+          if (!completer.isCompleted) {
+            completer.complete();
+          }
+        }),
+      ),
+    ),
   );
 
-  // Preload theme from shared preferences before running the app
-  await ThemeController.instance.loadFromPrefs();
-  
-  // Initialize auth service
-  await AuthService().initializeAuth();
-  
-  runApp(const MainApp());
+  // Show window only after app is initialized and first frame is rendered (desktop only)
+  await AppInitialization.showDesktopWindow();
 }
 
 class MainApp extends StatefulWidget {
-  const MainApp({super.key});
+  final VoidCallback? onFirstFrameRendered;
+
+  const MainApp({super.key, this.onFirstFrameRendered});
 
   @override
   State<MainApp> createState() => _MainAppState();
@@ -37,6 +77,11 @@ class _MainAppState extends State<MainApp> {
   void initState() {
     super.initState();
     ThemeController.instance.addListener(_onThemeChanged);
+
+    // Call onFirstFrameRendered callback after the first frame is rendered
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      widget.onFirstFrameRendered?.call();
+    });
   }
 
   @override
@@ -51,9 +96,42 @@ class _MainAppState extends State<MainApp> {
 
   @override
   Widget build(BuildContext context) {
+    print('Building harajApp - Web: $kIsWeb');
+
     final controller = ThemeController.instance;
+
+    // Material App
     return MaterialApp(
-      title: 'Haraj Cars',
+      title: 'Haraj Ohio',
+      debugShowCheckedModeBanner: false,
+      locale: context.locale,
+      // Force LTR
+      builder: (context, child) {
+        Widget wrappedChild = Directionality(
+          textDirection: ui.TextDirection.ltr,
+          child: !kIsWeb && (Platform.isWindows || Platform.isMacOS)
+              ? ScrollConfiguration(
+                  behavior: const ScrollBehavior().copyWith(
+                    scrollbars: false,
+                  ),
+                  child: child ?? Container(),
+                )
+              : child ?? Container(),
+        );
+
+        // Apply custom window frame on Windows
+        if (!kIsWeb && (Platform.isWindows || Platform.isMacOS)) {
+          return CustomWindowFrame(
+            child: wrappedChild,
+          );
+        }
+
+        return wrappedChild;
+      },
+      localizationsDelegates:
+          context.localizationDelegates + [AppLocalizations.delegate],
+      supportedLocales: context.supportedLocales,
+
       themeMode: controller.themeMode,
       theme: ThemeData(
         colorScheme: ColorScheme(
@@ -99,9 +177,14 @@ class _MainAppState extends State<MainApp> {
         fontFamily: 'Tajawal',
         useMaterial3: false,
       ),
-      initialRoute: '/',
-      onGenerateRoute: AppRouter.generateRoute,
-      debugShowCheckedModeBanner: false,
+      // Screens
+      initialRoute:
+          (Platform.isAndroid || Platform.isIOS) ? '/initial' : '/splash',
+      routes: {
+        '/splash': (context) => const SplashScreen(),
+        '/initial': (context) => const IntroScreen(),
+        '/tab_manger': (context) => const TabMangerScreen(),
+      },
     );
   }
 }

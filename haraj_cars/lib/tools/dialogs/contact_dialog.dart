@@ -9,7 +9,9 @@ class ContactDialog extends StatelessWidget {
     return ModernDialogBase(
       title: 'Contact Us',
       icon: Icons.contact_support,
-      iconColor: Theme.of(context).colorScheme.primary,
+      iconColor: Theme.of(context).brightness == Brightness.dark
+          ? Colors.white
+          : Theme.of(context).colorScheme.primary,
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -75,7 +77,9 @@ class ContactDialog extends StatelessWidget {
               children: [
                 Icon(
                   Icons.info_outline,
-                  color: Theme.of(context).colorScheme.primary,
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.white
+                      : Theme.of(context).colorScheme.primary,
                   size: 20,
                 ),
                 const SizedBox(width: 12),

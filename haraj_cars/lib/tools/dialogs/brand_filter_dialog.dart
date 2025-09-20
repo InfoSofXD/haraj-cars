@@ -21,7 +21,9 @@ class BrandFilterDialog extends StatelessWidget {
     return ModernDialogBase(
       title: 'Filter by Brand',
       icon: Icons.directions_car,
-      iconColor: Theme.of(context).colorScheme.primary,
+      iconColor: Theme.of(context).brightness == Brightness.dark
+          ? Colors.white
+          : Theme.of(context).colorScheme.primary,
       content: SizedBox(
         height: 300,
         child: ListView.builder(
@@ -186,7 +188,7 @@ class BrandFilterDialog extends StatelessWidget {
             if (isSelected)
               Icon(
                 Icons.check_circle,
-                color: colorScheme.primary,
+                color: isDark ? Colors.white : colorScheme.primary,
                 size: 20,
               )
             else
@@ -217,4 +219,3 @@ class BrandFilterDialog extends StatelessWidget {
     );
   }
 }
-

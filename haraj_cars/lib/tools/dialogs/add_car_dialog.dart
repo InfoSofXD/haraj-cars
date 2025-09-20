@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../main/tabs/cars_cards_tab/creat_or_update_car/create_update_car_logic.dart';
-import '../../scrapping_tools/car_scraper.dart';
+import '../../screens/add_car_screen.dart';
+import '../../screens/car_scraper.dart';
 import 'modern_dialog_base.dart';
 
 class AddCarDialog extends StatelessWidget {
@@ -18,7 +18,9 @@ class AddCarDialog extends StatelessWidget {
     return ModernDialogBase(
       title: 'Add New Car',
       icon: Icons.add_circle_outline,
-      iconColor: Theme.of(context).colorScheme.primary,
+      iconColor: Theme.of(context).brightness == Brightness.dark
+          ? Colors.white
+          : Theme.of(context).colorScheme.primary,
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -111,7 +113,7 @@ class AddCarDialog extends StatelessWidget {
               ),
               child: Icon(
                 icon,
-                color: colorScheme.primary,
+                color: isDark ? Colors.white : colorScheme.primary,
                 size: 24,
               ),
             ),

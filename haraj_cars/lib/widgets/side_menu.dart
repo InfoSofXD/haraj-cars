@@ -240,10 +240,6 @@ class _SideMenuState extends State<SideMenu> {
             ],
           ),
           const SizedBox(height: 20),
-          Container(
-            height: 1,
-            color: Colors.white.withOpacity(0.2),
-          ),
         ],
       ),
     );

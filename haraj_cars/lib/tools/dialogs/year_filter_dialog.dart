@@ -24,7 +24,9 @@ class YearFilterDialog extends StatelessWidget {
     return ModernDialogBase(
       title: 'Filter by Year',
       icon: Icons.calendar_today,
-      iconColor: Theme.of(context).colorScheme.primary,
+      iconColor: Theme.of(context).brightness == Brightness.dark
+          ? Colors.white
+          : Theme.of(context).colorScheme.primary,
       content: SizedBox(
         height: 300,
         child: ListView.builder(
@@ -190,7 +192,7 @@ class YearFilterDialog extends StatelessWidget {
             if (isSelected)
               Icon(
                 Icons.check_circle,
-                color: colorScheme.primary,
+                color: isDark ? Colors.white : colorScheme.primary,
                 size: 20,
               )
             else
@@ -221,4 +223,3 @@ class YearFilterDialog extends StatelessWidget {
     );
   }
 }
-

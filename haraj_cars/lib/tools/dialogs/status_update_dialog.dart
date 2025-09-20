@@ -82,7 +82,9 @@ class _StatusUpdateDialogState extends State<StatusUpdateDialog> {
     return ModernDialogBase(
       title: 'Update Car Status',
       icon: Icons.edit,
-      iconColor: Theme.of(context).colorScheme.primary,
+      iconColor: Theme.of(context).brightness == Brightness.dark
+          ? Colors.white
+          : Theme.of(context).colorScheme.primary,
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -108,7 +110,9 @@ class _StatusUpdateDialogState extends State<StatusUpdateDialog> {
               children: [
                 Icon(
                   Icons.directions_car,
-                  color: Theme.of(context).colorScheme.primary,
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.white
+                      : Theme.of(context).colorScheme.primary,
                   size: 24,
                 ),
                 const SizedBox(width: 12),
@@ -159,7 +163,9 @@ class _StatusUpdateDialogState extends State<StatusUpdateDialog> {
                   children: [
                     Icon(
                       Icons.update,
-                      color: Theme.of(context).colorScheme.primary,
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.white
+                          : Theme.of(context).colorScheme.primary,
                       size: 24,
                     ),
                     const SizedBox(width: 12),

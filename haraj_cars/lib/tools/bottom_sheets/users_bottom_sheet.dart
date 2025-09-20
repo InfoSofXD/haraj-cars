@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../tools/Palette/theme.dart' as custom_theme;
 import '../../../supabase/supabase_service.dart';
 import '../dialogs/delete_user_dialog.dart';
+import 'modern_bottom_sheet_base.dart';
 
 class UsersBottomSheet extends StatefulWidget {
   const UsersBottomSheet({Key? key}) : super(key: key);
@@ -10,11 +11,12 @@ class UsersBottomSheet extends StatefulWidget {
   State<UsersBottomSheet> createState() => _UsersBottomSheetState();
 
   static void show(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => const UsersBottomSheet(),
+    ModernBottomSheetBase.show(
+      context,
+      title: 'All Users',
+      icon: Icons.people,
+      iconColor: custom_theme.light.shade700,
+      content: const UsersBottomSheet(),
     );
   }
 }
@@ -90,179 +92,78 @@ class _UsersBottomSheetState extends State<UsersBottomSheet> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    return Container(
-      height: MediaQuery.of(context).size.height * 0.85,
-      decoration: BoxDecoration(
-        color: isDark ? custom_theme.dark.shade900 : Colors.white,
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(20),
-          topRight: Radius.circular(20),
+    return Column(
+      children: [
+        // User count
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              '${_users.length} registered users',
+              style: TextStyle(
+                fontSize: 14,
+                color: isDark ? Colors.grey[400] : Colors.grey[600],
+                fontFamily: 'Tajawal',
+              ),
+            ),
+          ],
         ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.3),
-            spreadRadius: 0,
-            blurRadius: 20,
-            offset: const Offset(0, -5),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          // Handle bar
-          Container(
-            margin: const EdgeInsets.only(top: 12),
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: isDark ? Colors.white.withOpacity(0.3) : Colors.grey[400],
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
 
-          // Header
-          Padding(
-            padding: const EdgeInsets.all(20),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: custom_theme.light.shade100,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(
-                    Icons.people,
+        const SizedBox(height: 16),
+
+        // Search bar
+        ModernBottomSheetSearchField(
+          controller: _searchController,
+          hintText: 'Search by name, email, or phone...',
+          onChanged: () => _searchUsers(_searchController.text),
+          prefixIcon: Icons.search,
+        ),
+
+        const SizedBox(height: 20),
+
+        // Users list
+        Expanded(
+          child: _isLoading
+              ? Center(
+                  child: CircularProgressIndicator(
                     color: custom_theme.light.shade700,
-                    size: 24,
                   ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'All Users',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: isDark
-                              ? Colors.white
-                              : custom_theme.light.shade800,
-                          fontFamily: 'Tajawal',
-                        ),
-                      ),
-                      Text(
-                        '${_users.length} registered users',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: isDark ? Colors.grey[400] : Colors.grey[600],
-                          fontFamily: 'Tajawal',
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                IconButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  icon: Icon(
-                    Icons.close,
-                    color: isDark ? Colors.white : custom_theme.light.shade700,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // Search bar
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Container(
-              decoration: BoxDecoration(
-                color: isDark ? Colors.grey[800] : Colors.grey[100],
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: isDark
-                      ? Colors.white.withOpacity(0.1)
-                      : Colors.grey[300]!,
-                ),
-              ),
-              child: TextField(
-                controller: _searchController,
-                onChanged: _searchUsers,
-                style: TextStyle(
-                  color: isDark ? Colors.white : custom_theme.light.shade800,
-                  fontFamily: 'Tajawal',
-                ),
-                decoration: InputDecoration(
-                  hintText: 'Search by name, email, or phone...',
-                  hintStyle: TextStyle(
-                    color: isDark ? Colors.grey[400] : Colors.grey[500],
-                    fontFamily: 'Tajawal',
-                  ),
-                  prefixIcon: Icon(
-                    Icons.search,
-                    color: isDark ? Colors.grey[400] : Colors.grey[500],
-                  ),
-                  border: InputBorder.none,
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
-                  ),
-                ),
-              ),
-            ),
-          ),
-
-          const SizedBox(height: 20),
-
-          // Users list
-          Expanded(
-            child: _isLoading
-                ? Center(
-                    child: CircularProgressIndicator(
-                      color: custom_theme.light.shade700,
-                    ),
-                  )
-                : _filteredUsers.isEmpty
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.people_outline,
-                              size: 64,
+                )
+              : _filteredUsers.isEmpty
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.people_outline,
+                            size: 64,
+                            color: isDark ? Colors.grey[600] : Colors.grey[400],
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            _searchQuery.isEmpty
+                                ? 'No users found'
+                                : 'No users match your search',
+                            style: TextStyle(
+                              fontSize: 16,
                               color:
-                                  isDark ? Colors.grey[600] : Colors.grey[400],
+                                  isDark ? Colors.grey[400] : Colors.grey[600],
+                              fontFamily: 'Tajawal',
                             ),
-                            const SizedBox(height: 16),
-                            Text(
-                              _searchQuery.isEmpty
-                                  ? 'No users found'
-                                  : 'No users match your search',
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: isDark
-                                    ? Colors.grey[400]
-                                    : Colors.grey[600],
-                                fontFamily: 'Tajawal',
-                              ),
-                            ),
-                          ],
-                        ),
-                      )
-                    : ListView.builder(
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        itemCount: _filteredUsers.length,
-                        itemBuilder: (context, index) {
-                          final user = _filteredUsers[index];
-                          return _buildUserCard(user, isDark);
-                        },
+                          ),
+                        ],
                       ),
-          ),
-        ],
-      ),
+                    )
+                  : ListView.builder(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      itemCount: _filteredUsers.length,
+                      itemBuilder: (context, index) {
+                        final user = _filteredUsers[index];
+                        return _buildUserCard(user, isDark);
+                      },
+                    ),
+        ),
+      ],
     );
   }
 

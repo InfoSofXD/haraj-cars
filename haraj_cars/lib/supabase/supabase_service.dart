@@ -186,28 +186,29 @@ class SupabaseService {
   }
 
   // Admin authentication
-  Future<bool> authenticateAdmin(String username, String password) async {
+  Future<Map<String, dynamic>?> authenticateAdmin(
+      String email, String password) async {
     try {
-      print('SupabaseService: Authenticating admin with username: $username');
+      print('SupabaseService: Authenticating admin with email: $email');
 
-      final response = await _supabase
-          .from('admin')
-          .select()
-          .eq('username', username)
-          .eq('password', password);
+      final response = await _supabase.rpc('authenticate_admin', params: {
+        'email_param': email,
+        'password_param': password,
+      });
 
-      print('SupabaseService: Response received: $response');
+      print('SupabaseService: Admin authentication response: $response');
 
-      // Check if we got any results
-      if (response.isNotEmpty) {
+      if (response != null && response.isNotEmpty) {
+        final adminData = response[0] as Map<String, dynamic>;
         print('SupabaseService: Admin authentication successful');
-        return true;
+        return adminData;
       }
-      print('SupabaseService: No admin user found with these credentials');
-      return false;
+
+      print('SupabaseService: No admin found with these credentials');
+      return null;
     } catch (e) {
       print('SupabaseService: Error authenticating admin: $e');
-      return false;
+      return null;
     }
   }
 
@@ -248,14 +249,14 @@ class SupabaseService {
     }
   }
 
-  // Test method to check admin table
+  // Test method to check admins table
   Future<void> testAdminTable() async {
     try {
-      print('SupabaseService: Testing admin table...');
-      final response = await _supabase.from('admin').select();
-      print('SupabaseService: Admin table response: $response');
+      print('SupabaseService: Testing admins table...');
+      final response = await _supabase.from('admins').select();
+      print('SupabaseService: Admins table response: $response');
     } catch (e) {
-      print('SupabaseService: Error testing admin table: $e');
+      print('SupabaseService: Error testing admins table: $e');
     }
   }
 
@@ -420,168 +421,123 @@ class SupabaseService {
     }
   }
 
-  // ========== WORKER METHODS ==========
-
-  // Get all workers
-  Future<List<Map<String, dynamic>>> getAllWorkers() async {
+  // Worker authentication
+  Future<Map<String, dynamic>?> authenticateWorker(
+      String email, String password) async {
     try {
-      print('SupabaseService: Getting all workers...');
-      final response = await _supabase
-          .from('workers_list')
-          .select()
-          .order('created_at', ascending: false);
-      
-      final workers = List<Map<String, dynamic>>.from(response);
-      print('SupabaseService: Found ${workers.length} workers');
-      return workers;
-    } catch (e) {
-      print('SupabaseService: Error getting workers: $e');
-      return [];
-    }
-  }
+      print('SupabaseService: Authenticating worker with email: $email');
 
-  // Get worker by ID
-  Future<Map<String, dynamic>?> getWorkerById(int id) async {
-    try {
-      print('SupabaseService: Getting worker by ID: $id...');
-      final response = await _supabase
-          .from('workers_list')
-          .select()
-          .eq('id', id)
-          .single();
-      
-      print('SupabaseService: Worker found: ${response['worker_name']}');
-      return response as Map<String, dynamic>;
-    } catch (e) {
-      print('SupabaseService: Error getting worker by ID: $e');
+      final response = await _supabase.rpc('authenticate_worker', params: {
+        'worker_email': email,
+        'worker_password': password,
+      });
+
+      print('SupabaseService: Worker authentication response: $response');
+
+      if (response != null && response.isNotEmpty) {
+        final workerData = response[0] as Map<String, dynamic>;
+        print('SupabaseService: Worker authentication successful');
+        return workerData;
+      }
+
+      print('SupabaseService: No worker found with these credentials');
       return null;
-    }
-  }
-
-  // Get worker by phone
-  Future<Map<String, dynamic>?> getWorkerByPhone(String phone) async {
-    try {
-      print('SupabaseService: Getting worker by phone: $phone...');
-      final response = await _supabase
-          .from('workers_list')
-          .select()
-          .eq('worker_phone', phone)
-          .single();
-      
-      print('SupabaseService: Worker found: ${response['worker_name']}');
-      return response as Map<String, dynamic>;
-    } catch (e) {
-      print('SupabaseService: Error getting worker by phone: $e');
-      return null;
-    }
-  }
-
-  // Create new worker
-  Future<Map<String, dynamic>?> createWorker(Map<String, dynamic> workerData) async {
-    try {
-      print('SupabaseService: Creating worker: ${workerData['worker_name']}...');
-      final response = await _supabase
-          .from('workers_list')
-          .insert(workerData)
-          .select()
-          .single();
-      
-      print('SupabaseService: Worker created successfully with ID: ${response['id']}');
-      return response as Map<String, dynamic>;
-    } catch (e) {
-      print('SupabaseService: Error creating worker: $e');
-      return null;
-    }
-  }
-
-  // Update worker
-  Future<Map<String, dynamic>?> updateWorker(int id, Map<String, dynamic> workerData) async {
-    try {
-      print('SupabaseService: Updating worker ID: $id...');
-      final response = await _supabase
-          .from('workers_list')
-          .update(workerData)
-          .eq('id', id)
-          .select()
-          .single();
-      
-      print('SupabaseService: Worker updated successfully');
-      return response as Map<String, dynamic>;
-    } catch (e) {
-      print('SupabaseService: Error updating worker: $e');
-      return null;
-    }
-  }
-
-  // Delete worker
-  Future<bool> deleteWorker(int id) async {
-    try {
-      print('SupabaseService: Deleting worker ID: $id...');
-      await _supabase
-          .from('workers_list')
-          .delete()
-          .eq('id', id);
-      
-      print('SupabaseService: Worker deleted successfully');
-      return true;
-    } catch (e) {
-      print('SupabaseService: Error deleting worker: $e');
-      return false;
-    }
-  }
-
-  // Authenticate worker
-  Future<Map<String, dynamic>?> authenticateWorker(String phone, String password) async {
-    try {
-      print('SupabaseService: Authenticating worker with phone: $phone...');
-      final response = await _supabase
-          .from('workers_list')
-          .select()
-          .eq('worker_phone', phone)
-          .eq('worker_password', password)
-          .single();
-      
-      print('SupabaseService: Worker authentication successful: ${response['worker_name']}');
-      return response as Map<String, dynamic>;
     } catch (e) {
       print('SupabaseService: Error authenticating worker: $e');
       return null;
     }
   }
 
-  // Update worker last login
-  Future<bool> updateWorkerLastLogin(int workerId) async {
+  // Check worker permission
+  Future<bool> checkWorkerPermission(
+      String workerUuid, String permissionName) async {
     try {
-      print('SupabaseService: Updating last login for worker ID: $workerId...');
-      await _supabase
-          .from('workers_list')
-          .update({'last_login': DateTime.now().toIso8601String()})
-          .eq('id', workerId);
-      
-      print('SupabaseService: Last login updated successfully');
-      return true;
+      print(
+          'SupabaseService: Checking permission $permissionName for worker $workerUuid');
+
+      final response = await _supabase.rpc('check_worker_permission', params: {
+        'worker_uuid': workerUuid,
+        'permission_name': permissionName,
+      });
+
+      print('SupabaseService: Permission check response: $response');
+      return response as bool;
     } catch (e) {
-      print('SupabaseService: Error updating last login: $e');
+      print('SupabaseService: Error checking worker permission: $e');
       return false;
     }
   }
 
-  // Search workers
-  Future<List<Map<String, dynamic>>> searchWorkers(String query) async {
+  // Get all workers (admin only)
+  Future<List<Map<String, dynamic>>> getAllWorkers() async {
     try {
-      print('SupabaseService: Searching workers with query: $query...');
-      final response = await _supabase
-          .from('workers_list')
-          .select()
-          .or('worker_name.ilike.%$query%,worker_phone.ilike.%$query%')
-          .order('created_at', ascending: false);
-      
+      print('SupabaseService: Getting all workers...');
+      final response = await _supabase.from('workers').select();
       final workers = List<Map<String, dynamic>>.from(response);
-      print('SupabaseService: Found ${workers.length} workers matching query');
+      print('SupabaseService: Found ${workers.length} workers');
       return workers;
     } catch (e) {
-      print('SupabaseService: Error searching workers: $e');
+      print('SupabaseService: Error getting all workers: $e');
       return [];
+    }
+  }
+
+  // Add new worker (admin only)
+  Future<bool> addWorker(Map<String, dynamic> workerData) async {
+    try {
+      print('SupabaseService: Adding worker with data: $workerData');
+      await _supabase.from('workers').insert(workerData);
+      return true;
+    } catch (e) {
+      print('SupabaseService: Error adding worker: $e');
+      return false;
+    }
+  }
+
+  // Update worker (admin only)
+  Future<bool> updateWorker(
+      String workerUuid, Map<String, dynamic> workerData) async {
+    try {
+      print(
+          'SupabaseService: Updating worker $workerUuid with data: $workerData');
+
+      // Add updated_at timestamp
+      final updateData = Map<String, dynamic>.from(workerData);
+      updateData['updated_at'] = DateTime.now().toIso8601String();
+
+      print('SupabaseService: Final update data: $updateData');
+
+      final response = await _supabase
+          .from('workers')
+          .update(updateData)
+          .eq('uuid', workerUuid)
+          .select();
+
+      print('SupabaseService: Update response: $response');
+
+      if (response.isNotEmpty) {
+        print('SupabaseService: Worker updated successfully');
+        return true;
+      } else {
+        print('SupabaseService: No worker found with UUID: $workerUuid');
+        return false;
+      }
+    } catch (e) {
+      print('SupabaseService: Error updating worker: $e');
+      print('SupabaseService: Error type: ${e.runtimeType}');
+      return false;
+    }
+  }
+
+  // Delete worker (admin only)
+  Future<bool> deleteWorker(String workerUuid) async {
+    try {
+      print('SupabaseService: Deleting worker $workerUuid...');
+      await _supabase.from('workers').delete().eq('uuid', workerUuid);
+      return true;
+    } catch (e) {
+      print('SupabaseService: Error deleting worker: $e');
+      return false;
     }
   }
 }

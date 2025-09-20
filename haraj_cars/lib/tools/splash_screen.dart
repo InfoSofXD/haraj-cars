@@ -30,9 +30,7 @@ class _SplashScreenState extends State<SplashScreen> {
         children: [
           Center(
             child: Image.asset(
-              Theme.of(context).brightness == Brightness.light
-                  ? 'assets/splash/splash_icon_light.png'
-                  : 'assets/splash/splash_icon_dark.png',
+              'assets/splash/splash_icon.png',
               width: 250,
               height: 250,
             ),

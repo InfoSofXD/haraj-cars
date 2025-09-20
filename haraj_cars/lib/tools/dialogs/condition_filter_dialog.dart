@@ -37,7 +37,9 @@ class _ConditionFilterDialogState extends State<ConditionFilterDialog> {
     return ModernDialogBase(
       title: 'Filter by Condition',
       icon: Icons.filter_list,
-      iconColor: Theme.of(context).colorScheme.primary,
+      iconColor: Theme.of(context).brightness == Brightness.dark
+          ? Colors.white
+          : Theme.of(context).colorScheme.primary,
       content: SizedBox(
         height: MediaQuery.of(context).size.height * 0.4,
         child: ListView(

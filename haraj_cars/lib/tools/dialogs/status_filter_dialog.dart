@@ -19,7 +19,9 @@ class StatusFilterDialog extends StatelessWidget {
     return ModernDialogBase(
       title: 'Filter by Status',
       icon: Icons.info,
-      iconColor: Theme.of(context).colorScheme.primary,
+      iconColor: Theme.of(context).brightness == Brightness.dark
+          ? Colors.white
+          : Theme.of(context).colorScheme.primary,
       content: SizedBox(
         height: 300,
         child: ListView.builder(

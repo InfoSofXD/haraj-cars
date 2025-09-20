@@ -22,6 +22,10 @@ dependencies:
   shared_preferences: ^2.2.2
   get_it: ^7.6.4
 
+  # UI Components
+  flutter_zoom_drawer: ^3.0.0
+  dyn_mouse_scroll: ^1.0.7
+
   # Media & Files
   image_picker: ^1.0.7
   camera: ^0.10.0
@@ -39,7 +43,6 @@ dependencies:
   flutter_bloc: ^9.1.1
 
   # Languages
-  
   flutter_localizations:
     sdk: flutter
   easy_localization: ^3.0.7+1
@@ -49,7 +52,6 @@ dependencies:
   flutter_native_splash: ^2.3.3
   flutter_launcher_icons: ^0.13.1
   window_manager: ^0.4.3
-  flutter_zoom_drawer: 3.0.0
 
 dev_dependencies:
   flutter_test:
@@ -58,6 +60,13 @@ dev_dependencies:
 
 flutter:
   assets:
+  # App logo & splash icon & App icon
+
+    # App Logo & Splash & Icon
+    - assets/logo/haraj_logo.png
+    - assets/logo/app_icon.png
+    - assets/splash/splash_icon.png
+    - assets/splash/branding.png
 
     # Language files
     - assets/langs/
