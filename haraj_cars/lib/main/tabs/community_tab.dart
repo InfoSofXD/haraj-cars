@@ -390,7 +390,7 @@ class _CommunityTabState extends State<CommunityTab> {
             child: Row(
               children: [
                 Icon(
-                  Icons.people,
+                  Icons.groups,
                   color: theme.brightness == Brightness.dark
                       ? Colors.white
                       : colorScheme.primary,

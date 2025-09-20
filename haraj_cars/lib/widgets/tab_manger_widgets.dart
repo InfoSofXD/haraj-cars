@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'dart:ui';
+import 'package:provider/provider.dart';
 import '../tools/Palette/theme.dart' as custom_theme;
+import '../tools/theme_controller.dart';
 
 class TabManagerWidgets {
   // Top Navigation Bar
@@ -178,9 +180,14 @@ class TabManagerWidgets {
                                 width: 1,
                               ),
                             ),
-                            child: StatefulBuilder(
-                              builder: (context, setInnerState) {
-                                return buildThemeOption(context, setInnerState);
+                            child: Consumer<ThemeController>(
+                              builder: (context, themeController, child) {
+                                return StatefulBuilder(
+                                  builder: (context, setInnerState) {
+                                    return buildThemeOption(context,
+                                        setInnerState, themeController);
+                                  },
+                                );
                               },
                             ),
                           ),
@@ -310,8 +317,8 @@ class TabManagerWidgets {
 
     return ClipRRect(
       borderRadius: const BorderRadius.only(
-        topLeft: Radius.circular(64),
-        topRight: Radius.circular(64),
+        topLeft: Radius.circular(32),
+        topRight: Radius.circular(32),
       ),
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
@@ -322,8 +329,8 @@ class TabManagerWidgets {
                 ? Colors.grey[700]!.withOpacity(0.3)
                 : custom_theme.light.shade100.withOpacity(0.3),
             borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(64),
-              topRight: Radius.circular(64),
+              topLeft: Radius.circular(32),
+              topRight: Radius.circular(32),
             ),
             border: Border.all(
               color: theme.brightness == Brightness.dark
@@ -365,7 +372,7 @@ class TabManagerWidgets {
                       buildBottomNavItem(context, Icons.public, isAdmin ? 2 : 1,
                           currentIndex == (isAdmin ? 2 : 1), onTabTapped),
                       // Community tab
-                      buildBottomNavItem(context, Icons.people, isAdmin ? 3 : 2,
+                      buildBottomNavItem(context, Icons.groups, isAdmin ? 3 : 2,
                           currentIndex == (isAdmin ? 3 : 2), onTabTapped),
                       // Favorites tab
                       buildBottomNavItem(
@@ -484,8 +491,10 @@ class TabManagerWidgets {
   }
 
   // Theme Option
-  static Widget buildThemeOption(
-      BuildContext context, StateSetter setInnerState) {
+  static Widget buildThemeOption(BuildContext context,
+      StateSetter setInnerState, ThemeController themeController) {
+    final currentThemeMode = themeController.themeMode;
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -493,8 +502,12 @@ class TabManagerWidgets {
           onTap: () {
             // This will be handled by the parent
           },
-          leading: const Icon(
-            Icons.settings,
+          leading: Icon(
+            currentThemeMode == ThemeMode.system
+                ? Icons.settings
+                : currentThemeMode == ThemeMode.dark
+                    ? Icons.dark_mode
+                    : Icons.light_mode,
             color: Colors.white,
           ),
           title: const Text(
@@ -518,9 +531,13 @@ class TabManagerWidgets {
                     color: Colors.white.withOpacity(0.2),
                   ),
                 ),
-                child: const Text(
-                  'SYS',
-                  style: TextStyle(
+                child: Text(
+                  currentThemeMode == ThemeMode.system
+                      ? 'SYS'
+                      : currentThemeMode == ThemeMode.dark
+                          ? 'DARK'
+                          : 'LIGHT',
+                  style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
                   ),

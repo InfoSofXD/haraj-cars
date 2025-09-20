@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'dart:ui';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_zoom_drawer/flutter_zoom_drawer.dart';
+import 'package:provider/provider.dart';
 import '../models/car.dart';
 import '../../tools/theme_controller.dart';
 import '../../tools/Palette/theme.dart' as custom_theme;
@@ -549,6 +551,11 @@ class _TabMangerScreenState extends State<TabMangerScreen>
       themeText = 'Light';
     }
 
+    // Update the theme controller
+    final themeController =
+        Provider.of<ThemeController>(context, listen: false);
+    themeController.setThemeBool(themeMode);
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('Theme changed to: $themeText'),
@@ -621,22 +628,30 @@ class _TabMangerScreenState extends State<TabMangerScreen>
             Row(
               children: [
                 // Hamburger menu button
-                GestureDetector(
-                  onTap: _toggleDrawer,
-                  child: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: colorScheme.onPrimary.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Icon(
-                      Icons.menu,
-                      color: theme.brightness == Brightness.dark
-                          ? Colors.white
-                          : colorScheme.onSurface,
-                      size: 20,
-                    ),
-                  ),
+                Builder(
+                  builder: (context) {
+                    return GestureDetector(
+                      onTap: () {
+                        print(
+                            'Hamburger button pressed - using Builder context');
+                        ZoomDrawer.of(context)?.toggle();
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: colorScheme.onPrimary.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Icon(
+                          Icons.menu,
+                          color: theme.brightness == Brightness.dark
+                              ? Colors.white
+                              : colorScheme.onSurface,
+                          size: 20,
+                        ),
+                      ),
+                    );
+                  },
                 ),
                 const SizedBox(width: 12),
                 Text(
@@ -906,6 +921,9 @@ class _TabMangerScreenState extends State<TabMangerScreen>
   }
 
   Widget _buildThemeOption(StateSetter setInnerState) {
+    final themeController = Provider.of<ThemeController>(context);
+    final currentThemeMode = themeController.themeMode;
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -923,9 +941,9 @@ class _TabMangerScreenState extends State<TabMangerScreen>
             });
           },
           leading: Icon(
-            themeMode == null
+            currentThemeMode == ThemeMode.system
                 ? Icons.settings
-                : themeMode == true
+                : currentThemeMode == ThemeMode.dark
                     ? Icons.dark_mode
                     : Icons.light_mode,
             color: Colors.white,
@@ -952,9 +970,9 @@ class _TabMangerScreenState extends State<TabMangerScreen>
                   ),
                 ),
                 child: Text(
-                  themeMode == null
+                  currentThemeMode == ThemeMode.system
                       ? 'SYS'
-                      : themeMode == true
+                      : currentThemeMode == ThemeMode.dark
                           ? 'DARK'
                           : 'LIGHT',
                   style: const TextStyle(
@@ -984,7 +1002,7 @@ class _TabMangerScreenState extends State<TabMangerScreen>
                   theme: 'System',
                   code: 'SYS',
                   icon: Icons.settings,
-                  isSelected: themeMode == null,
+                  isSelected: currentThemeMode == ThemeMode.system,
                   setInnerState: setInnerState,
                 ),
                 Container(
@@ -996,7 +1014,7 @@ class _TabMangerScreenState extends State<TabMangerScreen>
                   theme: 'Light',
                   code: 'LIGHT',
                   icon: Icons.light_mode,
-                  isSelected: themeMode == false,
+                  isSelected: currentThemeMode == ThemeMode.light,
                   setInnerState: setInnerState,
                 ),
                 Container(
@@ -1008,7 +1026,7 @@ class _TabMangerScreenState extends State<TabMangerScreen>
                   theme: 'Dark',
                   code: 'DARK',
                   icon: Icons.dark_mode,
-                  isSelected: themeMode == true,
+                  isSelected: currentThemeMode == ThemeMode.dark,
                   setInnerState: setInnerState,
                 ),
               ],
@@ -1185,19 +1203,20 @@ class _TabMangerScreenState extends State<TabMangerScreen>
       isSelected: isSelected,
       icon: icon,
       onTap: () {
+        bool? newThemeMode;
+        if (theme == 'System') {
+          newThemeMode = null;
+        } else if (theme == 'Light') {
+          newThemeMode = false;
+        } else {
+          newThemeMode = true;
+        }
+
         setInnerState(() {
-          if (theme == 'System') {
-            themeMode = null;
-          } else if (theme == 'Light') {
-            themeMode = false;
-          } else {
-            themeMode = true;
-          }
+          themeMode = newThemeMode;
           _saveSettings();
         });
-        // Apply app-wide theme via controller
-        ThemeController.instance.setThemeBool(themeMode);
-        _updateTheme(themeMode);
+        _updateTheme(newThemeMode);
       },
     );
   }
@@ -1591,11 +1610,17 @@ class _TabMangerScreenState extends State<TabMangerScreen>
   Future<void> _loadSettings() async {
     final prefs = await SharedPreferences.getInstance();
 
-    // Load theme mode
-    if (prefs.containsKey('theme_mode')) {
-      themeMode = prefs.getBool('theme_mode');
+    // Load theme mode from ThemeController (already loaded in main.dart)
+    final themeController =
+        Provider.of<ThemeController>(context, listen: false);
+    final currentThemeMode = themeController.themeMode;
+
+    if (currentThemeMode == ThemeMode.system) {
+      themeMode = null;
+    } else if (currentThemeMode == ThemeMode.dark) {
+      themeMode = true;
     } else {
-      themeMode = null; // Default to system
+      themeMode = false;
     }
 
     // Load language
@@ -1623,6 +1648,8 @@ class _TabMangerScreenState extends State<TabMangerScreen>
   }
 
   void _toggleDrawer() {
+    print('TabMangerScreen._toggleDrawer called');
+    // Use the static method with the current context
     SideMenu.toggle(context);
   }
 }

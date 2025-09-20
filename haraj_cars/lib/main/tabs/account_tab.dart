@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:ui';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../auth/tabs/sing_in_tab.dart';
+import '../../auth/sing_manger.dart';
 import '../../../tools/Palette/theme.dart' as custom_theme;
 
 class AccountTab extends StatefulWidget {
@@ -37,7 +37,7 @@ class _AccountTabState extends State<AccountTab> {
       if (mounted) {
         Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(
-            builder: (context) => const SignInScreen(),
+            builder: (context) => const SignManagerScreen(),
           ),
           (route) => false,
         );
@@ -303,7 +303,7 @@ class _AccountTabState extends State<AccountTab> {
                           onTap: () {
                             Navigator.of(context).push(
                               MaterialPageRoute(
-                                builder: (context) => const SignInScreen(),
+                                builder: (context) => const SignManagerScreen(),
                               ),
                             );
                           },

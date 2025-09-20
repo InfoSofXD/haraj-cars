@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../tools/Palette/theme.dart';
+import '../tools/Palette/gradients.dart';
 
 class IntroScreen extends StatefulWidget {
   const IntroScreen({Key? key}) : super(key: key);
@@ -13,39 +15,39 @@ class _IntroScreenState extends State<IntroScreen> {
 
   final List<OnboardingPage> _pages = [
     OnboardingPage(
-      title: "Welcome to Haraj Cars",
+      title: "Welcome to Haraj Ohio",
       description:
-          "Your ultimate destination for buying and selling cars in the USA. Find your dream car or sell your current one with ease.",
+          "Your ultimate destination for buying and selling cars in Ohio. Find your dream car or sell your current one with ease.",
       icon: Icons.directions_car,
-      color: const Color(0xFF1565C0),
+      color: light[500]!,
     ),
     OnboardingPage(
       title: "Browse Thousands of Cars",
       description:
           "Explore our extensive collection of cars from various brands, models, and price ranges. Filter by your preferences to find exactly what you're looking for.",
       icon: Icons.search,
-      color: const Color(0xFF1976D2),
+      color: light[400]!,
     ),
     OnboardingPage(
       title: "Global Car Market",
       description:
           "Access car listings from multiple global sites and compare prices. Get the best deals from trusted sellers worldwide.",
       icon: Icons.public,
-      color: const Color(0xFF1E88E5),
+      color: light[600]!,
     ),
     OnboardingPage(
       title: "Save Your Favorites",
       description:
           "Create your personal collection of favorite cars. Save cars you love and easily access them later for comparison.",
       icon: Icons.favorite,
-      color: const Color(0xFF2196F3),
+      color: light[300]!,
     ),
     OnboardingPage(
       title: "Trusted & Secure",
       description:
           "All our sellers are verified and trusted. Your safety and satisfaction are our top priorities. Start your car buying journey today!",
       icon: Icons.security,
-      color: const Color(0xFF42A5F5),
+      color: light[700]!,
     ),
   ];
 
@@ -68,20 +70,8 @@ class _IntroScreenState extends State<IntroScreen> {
   }
 
   void _goToLogin() {
-    // Show a simple dialog for now
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Login'),
-        content: const Text('Login functionality will be implemented soon!'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('OK'),
-          ),
-        ],
-      ),
-    );
+    // Navigate to sign manager
+    Navigator.of(context).pushNamed('/sign_manager');
   }
 
   void _goToGuest() {
@@ -94,15 +84,7 @@ class _IntroScreenState extends State<IntroScreen> {
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Color(0xFF1565C0),
-              Color(0xFF1976D2),
-              Color(0xFF1E88E5),
-            ],
-          ),
+          gradient: LightGradient.main,
         ),
         child: SafeArea(
           child: Column(
@@ -246,7 +228,7 @@ class _IntroScreenState extends State<IntroScreen> {
                 onPressed: _nextPage,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.white,
-                  foregroundColor: const Color(0xFF1565C0),
+                  foregroundColor: light[500],
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(28),
                   ),
@@ -299,7 +281,7 @@ class _IntroScreenState extends State<IntroScreen> {
                 onPressed: _goToLogin,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.white,
-                  foregroundColor: const Color(0xFF1565C0),
+                  foregroundColor: light[500],
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(28),
                   ),

@@ -3,6 +3,31 @@ import 'package:flutter_zoom_drawer/flutter_zoom_drawer.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../tools/theme_controller.dart';
 
+class SideMenuController {
+  static SideMenuController? _instance;
+  static SideMenuController get instance =>
+      _instance ??= SideMenuController._();
+
+  SideMenuController._();
+
+  VoidCallback? _toggleCallback;
+
+  void setToggleCallback(VoidCallback callback) {
+    print('Setting toggle callback: $callback');
+    _toggleCallback = callback;
+  }
+
+  void toggle() {
+    print('SideMenuController.toggle called');
+    if (_toggleCallback != null) {
+      print('Using callback approach');
+      _toggleCallback!();
+    } else {
+      print('No callback set');
+    }
+  }
+}
+
 class SideMenu extends StatefulWidget {
   final Widget child;
   final int currentIndex;
@@ -21,7 +46,15 @@ class SideMenu extends StatefulWidget {
   State<SideMenu> createState() => _SideMenuState();
 
   static void toggle(BuildContext context) {
-    ZoomDrawer.of(context)?.toggle();
+    print('SideMenu.toggle called with context: $context');
+    final zoomDrawer = ZoomDrawer.of(context);
+    print('ZoomDrawer found: $zoomDrawer');
+    if (zoomDrawer != null) {
+      print('Calling toggle on ZoomDrawer');
+      zoomDrawer.toggle();
+    } else {
+      print('ZoomDrawer is null - context issue');
+    }
   }
 }
 
@@ -33,14 +66,38 @@ class _SideMenuState extends State<SideMenu> {
   bool useSARCurrency = true;
   bool notificationsEnabled = true;
 
+  // Store the context from build method
+  BuildContext? _buildContext;
+
   @override
   void initState() {
     super.initState();
     _loadSettings();
   }
 
+  void _toggleDrawer() {
+    print('_toggleDrawer called');
+    // Use the stored context from build method
+    if (_buildContext != null) {
+      print('Using stored build context: $_buildContext');
+      SideMenu.toggle(_buildContext!);
+    } else {
+      print('Build context is null - using current context');
+      SideMenu.toggle(this.context);
+    }
+  }
+
+  void _findAndToggleZoomDrawer(BuildContext context) {
+    print('ZoomDrawer not found in widget tree - trying alternative approach');
+    // Try to use the static method with the current context
+    SideMenu.toggle(context);
+  }
+
   @override
   Widget build(BuildContext context) {
+    // Store the context from build method
+    _buildContext = context;
+
     return ZoomDrawer(
       menuScreen: _buildMenuScreen(),
       mainScreen: widget.child,
@@ -60,129 +117,172 @@ class _SideMenuState extends State<SideMenu> {
 
     return Scaffold(
       backgroundColor: colorScheme.primary,
-      body: Container(
-        decoration: BoxDecoration(
-          color: colorScheme.primary,
-        ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              _buildHeader(),
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Column(
-                    children: [
-                      const SizedBox(height: 20),
-                      _buildMenuSection(
-                        title: 'Navigation',
+      body: Stack(
+        children: [
+          Container(
+            decoration: BoxDecoration(
+              color: colorScheme.primary,
+            ),
+            child: SafeArea(
+              child: Column(
+                children: [
+                  _buildHeader(),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Column(
                         children: [
-                          if (widget.isAdmin)
-                            _buildMenuItem(
-                              icon: Icons.dashboard,
-                              title: 'Dashboard',
-                              subtitle: 'Overview & Analytics',
-                              isSelected: widget.currentIndex == 0,
-                              onTap: () => _navigateToTab(0),
-                            ),
-                          _buildMenuItem(
-                            icon: Icons.directions_car,
-                            title: 'Cars',
-                            subtitle: 'Browse & Manage Cars',
-                            isSelected:
-                                widget.currentIndex == (widget.isAdmin ? 1 : 0),
-                            onTap: () => _navigateToTab(widget.isAdmin ? 1 : 0),
+                          const SizedBox(height: 20),
+                          _buildMenuSection(
+                            title: 'Navigation',
+                            children: [
+                              if (widget.isAdmin)
+                                _buildMenuItem(
+                                  icon: Icons.dashboard,
+                                  title: 'Dashboard',
+                                  subtitle: 'Overview & Analytics',
+                                  isSelected: widget.currentIndex == 0,
+                                  onTap: () => _navigateToTab(0),
+                                ),
+                              _buildMenuItem(
+                                icon: Icons.directions_car,
+                                title: 'Cars',
+                                subtitle: 'Browse & Manage Cars',
+                                isSelected: widget.currentIndex ==
+                                    (widget.isAdmin ? 1 : 0),
+                                onTap: () =>
+                                    _navigateToTab(widget.isAdmin ? 1 : 0),
+                              ),
+                              _buildMenuItem(
+                                icon: Icons.public,
+                                title: 'Global Sites',
+                                subtitle: 'External Car Websites',
+                                isSelected: widget.currentIndex ==
+                                    (widget.isAdmin ? 2 : 1),
+                                onTap: () =>
+                                    _navigateToTab(widget.isAdmin ? 2 : 1),
+                              ),
+                              _buildMenuItem(
+                                icon: Icons.people,
+                                title: 'Community',
+                                subtitle: 'User Community',
+                                isSelected: widget.currentIndex ==
+                                    (widget.isAdmin ? 3 : 2),
+                                onTap: () =>
+                                    _navigateToTab(widget.isAdmin ? 3 : 2),
+                              ),
+                              _buildMenuItem(
+                                icon: Icons.favorite,
+                                title: 'Favorites',
+                                subtitle: 'Your Saved Cars',
+                                isSelected: widget.currentIndex ==
+                                    (widget.isAdmin ? 4 : 3),
+                                onTap: () =>
+                                    _navigateToTab(widget.isAdmin ? 4 : 3),
+                              ),
+                              _buildMenuItem(
+                                icon: Icons.info,
+                                title: 'Info',
+                                subtitle: 'App Information',
+                                isSelected: widget.currentIndex ==
+                                    (widget.isAdmin ? 5 : 4),
+                                onTap: () =>
+                                    _navigateToTab(widget.isAdmin ? 5 : 4),
+                              ),
+                              _buildMenuItem(
+                                icon: Icons.person,
+                                title: 'Account',
+                                subtitle: 'Profile & Settings',
+                                isSelected: widget.currentIndex ==
+                                    (widget.isAdmin ? 6 : 5),
+                                onTap: () =>
+                                    _navigateToTab(widget.isAdmin ? 6 : 5),
+                              ),
+                            ],
                           ),
-                          _buildMenuItem(
-                            icon: Icons.public,
-                            title: 'Global Sites',
-                            subtitle: 'External Car Websites',
-                            isSelected:
-                                widget.currentIndex == (widget.isAdmin ? 2 : 1),
-                            onTap: () => _navigateToTab(widget.isAdmin ? 2 : 1),
+                          const SizedBox(height: 30),
+                          _buildMenuSection(
+                            title: 'Settings',
+                            children: [
+                              _buildSettingsItem(
+                                icon: Icons.palette,
+                                title: 'Theme',
+                                subtitle: _getThemeText(),
+                                onTap: _showThemeDialog,
+                              ),
+                              _buildSettingsItem(
+                                icon: Icons.language,
+                                title: 'Language',
+                                subtitle: selectedLanguage,
+                                onTap: _showLanguageDialog,
+                              ),
+                              _buildSettingsItem(
+                                icon: Icons.straighten,
+                                title: 'Units',
+                                subtitle:
+                                    useMetricUnits ? 'Kilometers' : 'Miles',
+                                onTap: _showUnitsDialog,
+                              ),
+                              _buildSettingsItem(
+                                icon: Icons.attach_money,
+                                title: 'Currency',
+                                subtitle: useSARCurrency ? 'SAR' : 'USD',
+                                onTap: _showCurrencyDialog,
+                              ),
+                              _buildSettingsItem(
+                                icon: notificationsEnabled
+                                    ? Icons.notifications
+                                    : Icons.notifications_off,
+                                title: 'Notifications',
+                                subtitle: notificationsEnabled
+                                    ? 'Enabled'
+                                    : 'Disabled',
+                                onTap: _toggleNotifications,
+                                isToggle: true,
+                              ),
+                            ],
                           ),
-                          _buildMenuItem(
-                            icon: Icons.people,
-                            title: 'Community',
-                            subtitle: 'User Community',
-                            isSelected:
-                                widget.currentIndex == (widget.isAdmin ? 3 : 2),
-                            onTap: () => _navigateToTab(widget.isAdmin ? 3 : 2),
-                          ),
-                          _buildMenuItem(
-                            icon: Icons.favorite,
-                            title: 'Favorites',
-                            subtitle: 'Your Saved Cars',
-                            isSelected:
-                                widget.currentIndex == (widget.isAdmin ? 4 : 3),
-                            onTap: () => _navigateToTab(widget.isAdmin ? 4 : 3),
-                          ),
-                          _buildMenuItem(
-                            icon: Icons.info,
-                            title: 'Info',
-                            subtitle: 'App Information',
-                            isSelected:
-                                widget.currentIndex == (widget.isAdmin ? 5 : 4),
-                            onTap: () => _navigateToTab(widget.isAdmin ? 5 : 4),
-                          ),
-                          _buildMenuItem(
-                            icon: Icons.person,
-                            title: 'Account',
-                            subtitle: 'Profile & Settings',
-                            isSelected:
-                                widget.currentIndex == (widget.isAdmin ? 6 : 5),
-                            onTap: () => _navigateToTab(widget.isAdmin ? 6 : 5),
-                          ),
+                          const SizedBox(height: 40),
                         ],
                       ),
-                      const SizedBox(height: 30),
-                      _buildMenuSection(
-                        title: 'Settings',
-                        children: [
-                          _buildSettingsItem(
-                            icon: Icons.palette,
-                            title: 'Theme',
-                            subtitle: _getThemeText(),
-                            onTap: _showThemeDialog,
-                          ),
-                          _buildSettingsItem(
-                            icon: Icons.language,
-                            title: 'Language',
-                            subtitle: selectedLanguage,
-                            onTap: _showLanguageDialog,
-                          ),
-                          _buildSettingsItem(
-                            icon: Icons.straighten,
-                            title: 'Units',
-                            subtitle: useMetricUnits ? 'Kilometers' : 'Miles',
-                            onTap: _showUnitsDialog,
-                          ),
-                          _buildSettingsItem(
-                            icon: Icons.attach_money,
-                            title: 'Currency',
-                            subtitle: useSARCurrency ? 'SAR' : 'USD',
-                            onTap: _showCurrencyDialog,
-                          ),
-                          _buildSettingsItem(
-                            icon: notificationsEnabled
-                                ? Icons.notifications
-                                : Icons.notifications_off,
-                            title: 'Notifications',
-                            subtitle:
-                                notificationsEnabled ? 'Enabled' : 'Disabled',
-                            onTap: _toggleNotifications,
-                            isToggle: true,
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 40),
-                    ],
+                    ),
                   ),
-                ),
+                ],
               ),
-            ],
+            ),
           ),
-        ),
+          // Close button positioned in top right corner of screen
+          Positioned(
+            top: 20, // Adjust this value to position it properly
+            right: 20,
+            child: Builder(
+              builder: (context) {
+                return GestureDetector(
+                  onTap: () {
+                    print('Close button pressed');
+                    ZoomDrawer.of(context)?.toggle();
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: Colors.white.withOpacity(0.3),
+                        width: 1,
+                      ),
+                    ),
+                    child: const Icon(
+                      Icons.close,
+                      color: Colors.white,
+                      size: 24,
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }

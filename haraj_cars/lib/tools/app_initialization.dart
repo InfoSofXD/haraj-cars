@@ -62,15 +62,18 @@ class AppInitialization {
     await windowManager.hide();
 
     WindowOptions windowOptions = const WindowOptions(
-      size: Size(1280, 800),
+      size: Size(650, 1050),
       minimumSize: Size(650, 768),
-      center: true,
+      center: false,
       title: 'Haraj Ohio',
       backgroundColor: Colors.transparent,
       titleBarStyle: TitleBarStyle.hidden,
     );
 
     await windowManager.waitUntilReadyToShow(windowOptions);
+
+    // Position
+    await windowManager.setPosition(const Offset(1275, 0));
   }
 
   static Future<void> showDesktopWindow() async {

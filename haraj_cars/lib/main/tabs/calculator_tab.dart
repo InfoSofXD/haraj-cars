@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
-import 'dart:ui';
+import 'package:provider/provider.dart';
+import '../../tools/calculator_viewmodel.dart';
+import '../../services/car_fee_calculator.dart';
+import '../../tools/Palette/theme.dart';
+import '../../tools/Palette/gradients.dart';
+import '../../tools/theme_controller.dart';
 
 class CalculatorTab extends StatefulWidget {
   const CalculatorTab({Key? key}) : super(key: key);
@@ -9,388 +14,478 @@ class CalculatorTab extends StatefulWidget {
 }
 
 class _CalculatorTabState extends State<CalculatorTab> {
-  String _display = '0';
-  String _operation = '';
-  double _firstNumber = 0;
-  double _secondNumber = 0;
-  bool _waitingForOperand = false;
-  String _history = '';
+  final List<TextEditingController> _controllers = [];
+  final ScrollController _scrollController = ScrollController();
 
-  void _onButtonPressed(String value) {
-    setState(() {
-      if (value == 'C') {
-        _clearAll();
-      } else if (value == 'CE') {
-        _clearEntry();
-      } else if (value == '⌫') {
-        _backspace();
-      } else if (value == '±') {
-        _toggleSign();
-      } else if (value == '%') {
-        _percentage();
-      } else if (value == '=') {
-        if (_operation.isNotEmpty && !_waitingForOperand) {
-          _secondNumber = double.parse(_display);
-          _calculate();
-        }
-      } else if (['+', '-', '×', '÷'].contains(value)) {
-        if (_operation.isNotEmpty && !_waitingForOperand) {
-          _secondNumber = double.parse(_display);
-          _calculate();
-        }
-        _firstNumber = double.parse(_display);
-        _operation = value;
-        _waitingForOperand = true;
-        _history = '$_firstNumber $value';
-      } else if (value == '.') {
-        if (_waitingForOperand) {
-          _display = '0.';
-          _waitingForOperand = false;
-        } else if (!_display.contains('.')) {
-          _display += '.';
-        }
-      } else {
-        if (_waitingForOperand) {
-          _display = value;
-          _waitingForOperand = false;
-        } else {
-          _display = _display == '0' ? value : _display + value;
-        }
-      }
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<CalculatorViewModel>().reset();
     });
   }
 
-  void _clearAll() {
-    _display = '0';
-    _operation = '';
-    _firstNumber = 0;
-    _secondNumber = 0;
-    _waitingForOperand = false;
-    _history = '';
+  @override
+  void dispose() {
+    for (var controller in _controllers) {
+      controller.dispose();
+    }
+    _scrollController.dispose();
+    super.dispose();
   }
 
-  void _clearEntry() {
-    _display = '0';
-  }
+  void _initializeControllers(CalculatorViewModel viewModel) {
+    // Dispose existing controllers
+    for (var controller in _controllers) {
+      controller.dispose();
+    }
+    _controllers.clear();
 
-  void _backspace() {
-    if (_display.length > 1) {
-      _display = _display.substring(0, _display.length - 1);
-    } else {
-      _display = '0';
+    // Create new controllers for current mode inputs
+    final requiredInputs =
+        CarFeeCalculator.getRequiredInputs(viewModel.selectedMode);
+    for (String input in requiredInputs) {
+      final controller = TextEditingController();
+      controller.text = viewModel.inputs[input]?.toString() ?? '0';
+      controller.addListener(() {
+        final value = double.tryParse(controller.text) ?? 0.0;
+        viewModel.updateInput(input, value);
+      });
+      _controllers.add(controller);
     }
   }
 
-  void _toggleSign() {
-    if (_display != '0' && _display != 'Error') {
-      if (_display.startsWith('-')) {
-        _display = _display.substring(1);
-      } else {
-        _display = '-$_display';
-      }
-    }
-  }
-
-  void _percentage() {
-    if (_display != '0' && _display != 'Error') {
-      double value = double.parse(_display);
-      _display = (value / 100).toString();
-    }
-  }
-
-  void _calculate() {
-    double result = 0;
-    switch (_operation) {
-      case '+':
-        result = _firstNumber + _secondNumber;
-        break;
-      case '-':
-        result = _firstNumber - _secondNumber;
-        break;
-      case '×':
-        result = _firstNumber * _secondNumber;
-        break;
-      case '÷':
-        if (_secondNumber != 0) {
-          result = _firstNumber / _secondNumber;
-        } else {
-          _display = 'Error';
-          _operation = '';
-          _firstNumber = 0;
-          _secondNumber = 0;
-          _waitingForOperand = false;
-          _history = '';
-          return;
-        }
-        break;
-    }
-
-    // Format result to remove unnecessary decimal places
-    if (result == result.toInt()) {
-      _display = result.toInt().toString();
-    } else {
-      _display = result.toString();
-    }
-
-    _history = '$_firstNumber $_operation $_secondNumber = $_display';
-    _operation = '';
-    _firstNumber = result;
-    _secondNumber = 0;
-    _waitingForOperand = false;
-  }
-
-  Widget _buildButton(String text,
-      {Color? backgroundColor, Color? textColor, double? fontSize}) {
-    final isOperator = ['+', '-', '×', '÷', '='].contains(text);
-    final isSpecial = ['C', 'CE', '⌫', '±', '%'].contains(text);
-    final isNumber = RegExp(r'^[0-9]$').hasMatch(text);
-
+  Widget _buildInputField(String key, String label,
+      TextEditingController controller, bool isDarkMode) {
     return Container(
-      margin: const EdgeInsets.all(3),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
-          child: Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              fontFamily: 'Tajawal',
+            ),
+          ),
+          const SizedBox(height: 8),
+          Container(
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: backgroundColor != null
-                    ? [backgroundColor, backgroundColor.withOpacity(0.8)]
-                    : isOperator
-                        ? [
-                            const Color(0xFFFF9500),
-                            const Color(0xFFFF9500).withOpacity(0.8),
-                          ]
-                        : isSpecial
-                            ? [
-                                const Color(0xFFA6A6A6),
-                                const Color(0xFFA6A6A6).withOpacity(0.8),
-                              ]
-                            : isNumber
-                                ? [
-                                    const Color(0xFF333333),
-                                    const Color(0xFF333333).withOpacity(0.8),
-                                  ]
-                                : [
-                                    const Color(0xFF333333),
-                                    const Color(0xFF333333).withOpacity(0.8),
-                                  ],
-              ),
-              borderRadius: BorderRadius.circular(20),
+              color: isDarkMode
+                  ? dark.shade800.withOpacity(0.3)
+                  : light.shade800.withOpacity(0.3),
+              borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: Colors.white.withOpacity(0.1),
+                color: Colors.white.withOpacity(0.2),
                 width: 1,
               ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.2),
-                  spreadRadius: 0,
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
             ),
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: () => _onButtonPressed(text),
-                borderRadius: BorderRadius.circular(20),
-                child: Container(
-                  height: 75,
-                  alignment: Alignment.center,
-                  child: Text(
-                    text,
-                    style: TextStyle(
-                      color: textColor ??
-                          (isOperator ? Colors.white : Colors.white),
-                      fontSize: fontSize ?? 24,
-                      fontWeight: FontWeight.w600,
-                      fontFamily: 'Tajawal',
-                    ),
-                  ),
+            child: TextField(
+              controller: controller,
+              keyboardType: TextInputType.number,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontFamily: 'Tajawal',
+              ),
+              decoration: InputDecoration(
+                hintText: '0.00',
+                hintStyle: TextStyle(
+                  color: Colors.white.withOpacity(0.5),
+                  fontFamily: 'Tajawal',
+                ),
+                border: InputBorder.none,
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+                suffixText: 'USD',
+                suffixStyle: TextStyle(
+                  color: Colors.white.withOpacity(0.7),
+                  fontFamily: 'Tajawal',
                 ),
               ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
+  Widget _buildCalculationResult(Map<String, dynamic> result,
+      String currencyCode, String currencySymbol, bool isDarkMode) {
     return Container(
+      margin: const EdgeInsets.only(top: 20),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: colorScheme.primary,
+        color: isDarkMode
+            ? dark.shade800.withOpacity(0.4)
+            : light.shade800.withOpacity(0.4),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: Colors.white.withOpacity(0.2),
+          width: 1,
+        ),
       ),
-      child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            children: [
-              // Header
-              Container(
-                padding: const EdgeInsets.symmetric(vertical: 20),
-                child: const Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.calculate,
-                      color: Colors.white,
-                      size: 32,
-                    ),
-                    SizedBox(width: 12),
-                    Text(
-                      'Calculator',
-                      style: TextStyle(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'نتائج الحساب',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              fontFamily: 'Tajawal',
+            ),
+          ),
+          const SizedBox(height: 16),
+          ...result.entries.map((entry) {
+            if (entry.key == 'currencyCode') return const SizedBox.shrink();
+
+            final data = entry.value as Map<String, dynamic>;
+            final usdAmount = data['usd'] as double;
+            final localAmount = data['local'] as double;
+            final currency = data['currency'] as String;
+
+            return Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Text(
+                      _getArabicLabel(entry.key),
+                      style: const TextStyle(
                         color: Colors.white,
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
                         fontFamily: 'Tajawal',
                       ),
                     ),
-                  ],
-                ),
-              ),
-
-              // History Display
-              if (_history.isNotEmpty)
-                Container(
-                  width: double.infinity,
-                  margin: const EdgeInsets.only(bottom: 10),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(15),
-                    border: Border.all(
-                      color: Colors.white.withOpacity(0.1),
-                      width: 1,
-                    ),
                   ),
-                  child: Text(
-                    _history,
-                    textAlign: TextAlign.right,
-                    style: TextStyle(
-                      color: Colors.white.withOpacity(0.7),
-                      fontSize: 18,
-                      fontWeight: FontWeight.w400,
-                      fontFamily: 'Tajawal',
-                    ),
-                  ),
-                ),
-
-              // Main Display
-              Container(
-                width: double.infinity,
-                margin: const EdgeInsets.only(bottom: 20),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 30),
-                decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.4),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: Colors.white.withOpacity(0.2),
-                    width: 1,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.3),
-                      spreadRadius: 0,
-                      blurRadius: 20,
-                      offset: const Offset(0, 8),
-                    ),
-                  ],
-                ),
-                child: Text(
-                  _display,
-                  textAlign: TextAlign.right,
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: _display.length > 8 ? 28 : 42,
-                    fontWeight: FontWeight.w300,
-                    fontFamily: 'Tajawal',
-                  ),
-                ),
-              ),
-
-              // Calculator buttons
-              Expanded(
-                child: Container(
-                  padding: const EdgeInsets.all(8),
-                  child: Column(
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      // Row 1: C, CE, ⌫, ÷
-                      Expanded(
-                        child: Row(
-                          children: [
-                            Expanded(child: _buildButton('C')),
-                            Expanded(child: _buildButton('CE')),
-                            Expanded(child: _buildButton('⌫', fontSize: 20)),
-                            Expanded(child: _buildButton('÷')),
-                          ],
+                      Text(
+                        '\$${usdAmount.toStringAsFixed(2)}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          fontFamily: 'Tajawal',
                         ),
                       ),
-                      // Row 2: 7, 8, 9, ×
-                      Expanded(
-                        child: Row(
-                          children: [
-                            Expanded(child: _buildButton('7')),
-                            Expanded(child: _buildButton('8')),
-                            Expanded(child: _buildButton('9')),
-                            Expanded(child: _buildButton('×')),
-                          ],
-                        ),
-                      ),
-                      // Row 3: 4, 5, 6, -
-                      Expanded(
-                        child: Row(
-                          children: [
-                            Expanded(child: _buildButton('4')),
-                            Expanded(child: _buildButton('5')),
-                            Expanded(child: _buildButton('6')),
-                            Expanded(child: _buildButton('-')),
-                          ],
-                        ),
-                      ),
-                      // Row 4: 1, 2, 3, +
-                      Expanded(
-                        child: Row(
-                          children: [
-                            Expanded(child: _buildButton('1')),
-                            Expanded(child: _buildButton('2')),
-                            Expanded(child: _buildButton('3')),
-                            Expanded(child: _buildButton('+')),
-                          ],
-                        ),
-                      ),
-                      // Row 5: ±, 0, ., =
-                      Expanded(
-                        child: Row(
-                          children: [
-                            Expanded(child: _buildButton('±')),
-                            Expanded(
-                              flex: 2,
-                              child: _buildButton('0'),
-                            ),
-                            Expanded(child: _buildButton('.')),
-                            Expanded(child: _buildButton('=')),
-                          ],
+                      Text(
+                        '${localAmount.toStringAsFixed(2)} $currency',
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.8),
+                          fontSize: 14,
+                          fontFamily: 'Tajawal',
                         ),
                       ),
                     ],
                   ),
+                ],
+              ),
+            );
+          }).toList(),
+        ],
+      ),
+    );
+  }
+
+  String _getArabicLabel(String key) {
+    const labels = {
+      'deposit': 'العربون',
+      'carValue': 'قيمة شراء السيارة',
+      'auctionFees': 'رسوم المزاد',
+      'clearanceFees': 'رسوم تخليص السيارة من امريكا',
+      'titleFees': 'رسوم التايتل ورسوم اللوحة المؤقته',
+      'domesticShipping': 'رسوم الشحن الداخلي',
+      'specialClearance': 'رسوم خاصة بتخليص السيارة من امريكا',
+      'insuranceRequired': 'قيمة التأمين المطلوبة من العميل',
+      'gblInsurance': 'قيمة التأمين ل GBL',
+      'carBeforeDeposit': 'قيمة السيارة حتى وصولها الى الميناء قبل خصم العربون',
+      'carAfterDeposit': 'قيمة السيارة حتى وصولها الى الميناء بعد خصم العربون',
+      'customs': 'رسوم الجمارك والضريبة',
+      'finalPrice': 'السعر شامل',
+      'finalAmount': 'المبلغ النهائي',
+    };
+    return labels[key] ?? key;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer2<CalculatorViewModel, ThemeController>(
+      builder: (context, viewModel, themeController, child) {
+        // Initialize controllers when mode changes
+        if (_controllers.length !=
+            CarFeeCalculator.getRequiredInputs(viewModel.selectedMode).length) {
+          _initializeControllers(viewModel);
+        }
+
+        // Determine current theme mode
+        final isDarkMode = themeController.themeMode == ThemeMode.dark ||
+            (themeController.themeMode == ThemeMode.system &&
+                MediaQuery.of(context).platformBrightness == Brightness.dark);
+
+        return Container(
+          decoration: BoxDecoration(
+            gradient: isDarkMode ? DarkGradient.main : LightGradient.main,
+          ),
+          child: SafeArea(
+            child: Scaffold(
+              backgroundColor: Colors.transparent,
+              body: SingleChildScrollView(
+                controller: _scrollController,
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Header
+                    Container(
+                      padding: const EdgeInsets.symmetric(vertical: 20),
+                      child: const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.calculate,
+                            color: Colors.white,
+                            size: 32,
+                          ),
+                          SizedBox(width: 12),
+                          Text(
+                            'حاسبة رسوم استيراد السيارات',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              fontFamily: 'Tajawal',
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // Mode Selection
+                    Container(
+                      width: double.infinity,
+                      margin: const EdgeInsets.only(bottom: 20),
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: isDarkMode
+                            ? dark.shade800.withOpacity(0.3)
+                            : light.shade800.withOpacity(0.3),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: Colors.white.withOpacity(0.2),
+                          width: 1,
+                        ),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'نوع الحساب',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              fontFamily: 'Tajawal',
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          DropdownButtonFormField<String>(
+                            value: viewModel.selectedMode,
+                            decoration: InputDecoration(
+                              filled: true,
+                              fillColor: Colors.white.withOpacity(0.1),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(
+                                  color: Colors.white.withOpacity(0.3),
+                                ),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(
+                                  color: Colors.white.withOpacity(0.3),
+                                ),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                            dropdownColor:
+                                isDarkMode ? dark.shade800 : light.shade800,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontFamily: 'Tajawal',
+                            ),
+                            items: CarFeeCalculator.calculationModes
+                                .map((String mode) {
+                              return DropdownMenuItem<String>(
+                                value: mode,
+                                child: Text(
+                                  mode,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontFamily: 'Tajawal',
+                                  ),
+                                ),
+                              );
+                            }).toList(),
+                            onChanged: (String? newValue) {
+                              if (newValue != null) {
+                                viewModel.setCalculationMode(newValue);
+                              }
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // Input Fields
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: isDarkMode
+                            ? dark.shade800.withOpacity(0.3)
+                            : light.shade800.withOpacity(0.3),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: Colors.white.withOpacity(0.2),
+                          width: 1,
+                        ),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'بيانات الحساب',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              fontFamily: 'Tajawal',
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          ...CarFeeCalculator.getRequiredInputs(
+                                  viewModel.selectedMode)
+                              .asMap()
+                              .entries
+                              .map((entry) {
+                            final index = entry.key;
+                            final inputKey = entry.value;
+                            final controller = _controllers.length > index
+                                ? _controllers[index]
+                                : TextEditingController();
+                            return _buildInputField(
+                              inputKey,
+                              viewModel.getInputLabel(inputKey),
+                              controller,
+                              isDarkMode,
+                            );
+                          }).toList(),
+                        ],
+                      ),
+                    ),
+
+                    // Calculate Button
+                    Container(
+                      width: double.infinity,
+                      margin: const EdgeInsets.symmetric(vertical: 20),
+                      child: ElevatedButton(
+                        onPressed:
+                            viewModel.canCalculate && !viewModel.isCalculating
+                                ? () => viewModel.calculate()
+                                : null,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: viewModel.canCalculate
+                              ? const Color(0xFFFF9500)
+                              : Colors.grey,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: viewModel.isCalculating
+                            ? const SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Text(
+                                'حساب الرسوم',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  fontFamily: 'Tajawal',
+                                ),
+                              ),
+                      ),
+                    ),
+
+                    // Clear Button
+                    Container(
+                      width: double.infinity,
+                      margin: const EdgeInsets.only(bottom: 20),
+                      child: OutlinedButton(
+                        onPressed: () => viewModel.clearInputs(),
+                        style: OutlinedButton.styleFrom(
+                          side: BorderSide(
+                            color: Colors.white.withOpacity(0.5),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: const Text(
+                          'مسح البيانات',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontFamily: 'Tajawal',
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    // Results
+                    if (viewModel.calculationResult != null)
+                      _buildCalculationResult(
+                        viewModel.calculationResult!,
+                        viewModel.currencyCode,
+                        viewModel.currencySymbol,
+                        isDarkMode,
+                      ),
+
+                    const SizedBox(height: 70),
+                  ],
                 ),
               ),
-              const SizedBox(height: 50),
-            ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }

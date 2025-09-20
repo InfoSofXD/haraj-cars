@@ -14,8 +14,10 @@ import 'package:haraj/tools/window_frame.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'auth/intro.dart';
+import 'auth/sing_manger.dart';
 import 'tools/theme_controller.dart';
 import 'tools/Palette/theme.dart' as custom_theme;
+import 'tools/calculator_viewmodel.dart';
 
 void main() async {
   // Initialize app
@@ -23,6 +25,10 @@ void main() async {
 
   // Initialize translations
   await EasyLocalization.ensureInitialized();
+
+  // Initialize theme controller and load saved theme
+  final themeController = ThemeController.instance;
+  await themeController.loadFromPrefs();
 
   // Language Provider
   final languageProvider = LanguageProvider();
@@ -48,8 +54,18 @@ void main() async {
       path: 'assets/langs',
       fallbackLocale: const Locale('en'),
       useOnlyLangCode: true,
-      child: ChangeNotifierProvider<LanguageProvider>(
-        create: (_) => languageProvider,
+      child: MultiProvider(
+        providers: [
+          ChangeNotifierProvider<LanguageProvider>(
+            create: (_) => languageProvider,
+          ),
+          ChangeNotifierProvider<CalculatorViewModel>(
+            create: (_) => CalculatorViewModel(),
+          ),
+          ChangeNotifierProvider<ThemeController>(
+            create: (_) => themeController,
+          ),
+        ],
         child: MainApp(onFirstFrameRendered: () {
           if (!completer.isCompleted) {
             completer.complete();
@@ -98,7 +114,7 @@ class _MainAppState extends State<MainApp> {
   Widget build(BuildContext context) {
     print('Building harajApp - Web: $kIsWeb');
 
-    final controller = ThemeController.instance;
+    final controller = Provider.of<ThemeController>(context);
 
     // Material App
     return MaterialApp(
@@ -183,6 +199,7 @@ class _MainAppState extends State<MainApp> {
       routes: {
         '/splash': (context) => const SplashScreen(),
         '/initial': (context) => const IntroScreen(),
+        '/sign_manager': (context) => const SignManagerScreen(),
         '/tab_manger': (context) => const TabMangerScreen(),
       },
     );
