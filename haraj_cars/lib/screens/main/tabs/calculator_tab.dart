@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../tools/calculator_viewmodel.dart';
-import '../../services/car_fee_calculator.dart';
-import '../../tools/Palette/theme.dart';
-import '../../tools/Palette/gradients.dart';
-import '../../tools/theme_controller.dart';
+import '../../../tools/calculator_viewmodel.dart';
+import '../../../services/car_fee_calculator.dart';
 
 class CalculatorTab extends StatefulWidget {
   const CalculatorTab({Key? key}) : super(key: key);
@@ -55,8 +52,8 @@ class _CalculatorTabState extends State<CalculatorTab> {
     }
   }
 
-  Widget _buildInputField(String key, String label,
-      TextEditingController controller, bool isDarkMode) {
+  Widget _buildInputField(
+      String key, String label, TextEditingController controller) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       child: Column(
@@ -74,9 +71,7 @@ class _CalculatorTabState extends State<CalculatorTab> {
           const SizedBox(height: 8),
           Container(
             decoration: BoxDecoration(
-              color: isDarkMode
-                  ? dark.shade800.withOpacity(0.3)
-                  : light.shade800.withOpacity(0.3),
+              color: Colors.black.withOpacity(0.3),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
                 color: Colors.white.withOpacity(0.2),
@@ -115,15 +110,13 @@ class _CalculatorTabState extends State<CalculatorTab> {
     );
   }
 
-  Widget _buildCalculationResult(Map<String, dynamic> result,
-      String currencyCode, String currencySymbol, bool isDarkMode) {
+  Widget _buildCalculationResult(
+      Map<String, dynamic> result, String currencyCode, String currencySymbol) {
     return Container(
       margin: const EdgeInsets.only(top: 20),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: isDarkMode
-            ? dark.shade800.withOpacity(0.4)
-            : light.shade800.withOpacity(0.4),
+        color: Colors.black.withOpacity(0.4),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: Colors.white.withOpacity(0.2),
@@ -213,33 +206,43 @@ class _CalculatorTabState extends State<CalculatorTab> {
       'specialClearance': 'رسوم خاصة بتخليص السيارة من امريكا',
       'insuranceRequired': 'قيمة التأمين المطلوبة من العميل',
       'gblInsurance': 'قيمة التأمين ل GBL',
+      'discountPercentage': 'نسبة الخصم',
+      'fileNumber': 'رقم الملف',
+      'fullAmountBDAS': 'المبلغ الكامل للفاتورة BDAS',
+      'fullAmountOH': 'المبلغ الكامل للفاتورة OH',
+      'discountAmount': 'مبلغ الخصم',
       'carBeforeDeposit': 'قيمة السيارة حتى وصولها الى الميناء قبل خصم العربون',
       'carAfterDeposit': 'قيمة السيارة حتى وصولها الى الميناء بعد خصم العربون',
+      'carAfterDiscount': 'قيمة السيارة بعد الخصم',
       'customs': 'رسوم الجمارك والضريبة',
       'finalPrice': 'السعر شامل',
       'finalAmount': 'المبلغ النهائي',
+      'transferAmount': 'المبلغ المطلوب تحويلة الى المعرض',
+      'finalAmountKSA': 'المبلغ النهائي للسعودية',
     };
     return labels[key] ?? key;
   }
 
   @override
   Widget build(BuildContext context) {
-    return Consumer2<CalculatorViewModel, ThemeController>(
-      builder: (context, viewModel, themeController, child) {
+    return Consumer<CalculatorViewModel>(
+      builder: (context, viewModel, child) {
         // Initialize controllers when mode changes
         if (_controllers.length !=
             CarFeeCalculator.getRequiredInputs(viewModel.selectedMode).length) {
           _initializeControllers(viewModel);
         }
 
-        // Determine current theme mode
-        final isDarkMode = themeController.themeMode == ThemeMode.dark ||
-            (themeController.themeMode == ThemeMode.system &&
-                MediaQuery.of(context).platformBrightness == Brightness.dark);
-
         return Container(
-          decoration: BoxDecoration(
-            gradient: isDarkMode ? DarkGradient.main : LightGradient.main,
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Color(0xFF1E3A8A),
+                Color(0xFF3B82F6),
+              ],
+            ),
           ),
           child: SafeArea(
             child: Scaffold(
@@ -281,9 +284,7 @@ class _CalculatorTabState extends State<CalculatorTab> {
                       margin: const EdgeInsets.only(bottom: 20),
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: isDarkMode
-                            ? dark.shade800.withOpacity(0.3)
-                            : light.shade800.withOpacity(0.3),
+                        color: Colors.black.withOpacity(0.3),
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
                           color: Colors.white.withOpacity(0.2),
@@ -327,8 +328,7 @@ class _CalculatorTabState extends State<CalculatorTab> {
                                 ),
                               ),
                             ),
-                            dropdownColor:
-                                isDarkMode ? dark.shade800 : light.shade800,
+                            dropdownColor: const Color(0xFF1E3A8A),
                             style: const TextStyle(
                               color: Colors.white,
                               fontFamily: 'Tajawal',
@@ -361,9 +361,7 @@ class _CalculatorTabState extends State<CalculatorTab> {
                       width: double.infinity,
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
-                        color: isDarkMode
-                            ? dark.shade800.withOpacity(0.3)
-                            : light.shade800.withOpacity(0.3),
+                        color: Colors.black.withOpacity(0.3),
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
                           color: Colors.white.withOpacity(0.2),
@@ -397,7 +395,6 @@ class _CalculatorTabState extends State<CalculatorTab> {
                               inputKey,
                               viewModel.getInputLabel(inputKey),
                               controller,
-                              isDarkMode,
                             );
                           }).toList(),
                         ],
@@ -475,10 +472,9 @@ class _CalculatorTabState extends State<CalculatorTab> {
                         viewModel.calculationResult!,
                         viewModel.currencyCode,
                         viewModel.currencySymbol,
-                        isDarkMode,
                       ),
 
-                    const SizedBox(height: 70),
+                    const SizedBox(height: 50),
                   ],
                 ),
               ),

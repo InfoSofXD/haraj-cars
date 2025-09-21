@@ -368,32 +368,26 @@ class TabManagerWidgets {
                           isAdmin ? 1 : 0,
                           currentIndex == (isAdmin ? 1 : 0),
                           onTabTapped),
-                      // Global Sites tab
-                      buildBottomNavItem(context, Icons.public, isAdmin ? 2 : 1,
-                          currentIndex == (isAdmin ? 2 : 1), onTabTapped),
                       // Community tab
-                      buildBottomNavItem(context, Icons.groups, isAdmin ? 3 : 2,
-                          currentIndex == (isAdmin ? 3 : 2), onTabTapped),
+                      buildBottomNavItem(context, Icons.groups, isAdmin ? 2 : 1,
+                          currentIndex == (isAdmin ? 2 : 1), onTabTapped),
                       // Favorites tab
                       buildBottomNavItem(
                           context,
                           Icons.favorite,
-                          isAdmin ? 4 : 3,
-                          currentIndex == (isAdmin ? 4 : 3),
+                          isAdmin ? 3 : 2,
+                          currentIndex == (isAdmin ? 3 : 2),
                           onTabTapped),
                       // Calculator tab
                       buildBottomNavItem(
                           context,
                           Icons.calculate,
-                          isAdmin ? 5 : 4,
-                          currentIndex == (isAdmin ? 5 : 4),
+                          isAdmin ? 4 : 3,
+                          currentIndex == (isAdmin ? 4 : 3),
                           onTabTapped),
-                      // Info tab
-                      buildBottomNavItem(context, Icons.info, isAdmin ? 6 : 5,
-                          currentIndex == (isAdmin ? 6 : 5), onTabTapped),
                       // Account tab
-                      buildBottomNavItem(context, Icons.person, isAdmin ? 7 : 6,
-                          currentIndex == (isAdmin ? 7 : 6), onTabTapped),
+                      buildBottomNavItem(context, Icons.person, isAdmin ? 5 : 4,
+                          currentIndex == (isAdmin ? 5 : 4), onTabTapped),
                     ],
                   ),
                 ),

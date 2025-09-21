@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'dart:ui';
-import '../../models/car.dart';
-import '../../services/favorites_service.dart';
-import '../../tools/cards/car_card.dart';
-import '../../../tools/Palette/theme.dart' as custom_theme;
+import '../../../models/car.dart';
+import '../../../services/favorites_service.dart';
+import '../../../tools/cards/car_card.dart';
+import '../../../../tools/Palette/theme.dart' as custom_theme;
 
 class FavoritesTab extends StatefulWidget {
   const FavoritesTab({Key? key}) : super(key: key);

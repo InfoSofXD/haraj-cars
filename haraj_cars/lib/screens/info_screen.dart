@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'dart:ui';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../../tools/Palette/theme.dart' as custom_theme;
+import '../tools/Palette/theme.dart' as custom_theme;
 
-class InfoTab extends StatefulWidget {
-  const InfoTab({Key? key}) : super(key: key);
+class InfoScreen extends StatefulWidget {
+  const InfoScreen({Key? key}) : super(key: key);
 
   @override
-  State<InfoTab> createState() => _InfoTabState();
+  State<InfoScreen> createState() => _InfoScreenState();
 }
 
-class _InfoTabState extends State<InfoTab> {
+class _InfoScreenState extends State<InfoScreen> {
   // Settings state
   bool? themeMode; // null = system, true = dark, false = light
   String selectedLanguage = 'English';
@@ -82,124 +82,64 @@ class _InfoTabState extends State<InfoTab> {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return Container(
-      color: theme.brightness == Brightness.dark
+    return Scaffold(
+      backgroundColor: theme.brightness == Brightness.dark
           ? colorScheme.background
           : Colors.white,
-      child: Stack(
-        children: [
-          // Main Content
-          Column(
-            children: [
-              // Content (full screen, content scrolls under floating title)
-              Expanded(
-                child: ListView(
-                  padding: const EdgeInsets.only(
-                    left: 16,
-                    right: 16,
-                    top: 100, // Space for floating title
-                    bottom: 110, // Space for floating bottom nav bar
-                  ),
-                  children: [
-                    _buildInfoCard(
-                      'About Haraj Cars',
-                      'Find the best deals on new and used cars in the USA. Browse thousands of listings from trusted dealers and private sellers.',
-                      Icons.car_rental,
-                    ),
-                    _buildInfoCard(
-                      'Features',
-                      '• Search and filter cars by brand, year, price\n• Save your favorite cars\n• Browse global car marketplaces\n• Detailed car information and photos',
-                      Icons.star,
-                    ),
-                    _buildInfoCard(
-                      'Contact Us',
-                      'Email: support@harajcars.com\nPhone: +1 (555) 123-4567\nWebsite: www.harajcars.com',
-                      Icons.contact_support,
-                    ),
-                    _buildInfoCard(
-                      'Version',
-                      'Version 1.0.0\nBuild 2024.1\nLast updated: January 2024',
-                      Icons.info,
-                    ),
-                    const SizedBox(height: 20),
-                    // Settings Section
-                    _buildSettingsSection(),
-                    const SizedBox(height: 20),
-                  ],
-                ),
-              ),
-            ],
-          ),
-
-          // Floating Title
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: _buildFloatingTitle(),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFloatingTitle() {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    return Container(
-      margin: const EdgeInsets.all(16),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(12),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-            decoration: BoxDecoration(
-              color: theme.brightness == Brightness.dark
-                  ? Colors.grey[700]!.withOpacity(0.3)
-                  : custom_theme.light.shade100.withOpacity(0.3),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: theme.brightness == Brightness.dark
-                    ? Colors.white
-                    : custom_theme.light.shade300,
-                width: 1,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.3),
-                  spreadRadius: 0,
-                  blurRadius: 20,
-                  offset: const Offset(0, 8),
-                ),
-              ],
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.info,
-                  color: theme.brightness == Brightness.dark
-                      ? Colors.white
-                      : colorScheme.primary,
-                  size: 28,
-                ),
-                const SizedBox(width: 12),
-                Text(
-                  'App Information',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: theme.brightness == Brightness.dark
-                        ? Colors.white
-                        : colorScheme.onSurface,
-                    fontFamily: 'Tajawal',
-                  ),
-                ),
-              ],
-            ),
+      appBar: AppBar(
+        title: Text(
+          'App Information',
+          style: TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            fontFamily: 'Tajawal',
+            color: theme.brightness == Brightness.dark
+                ? Colors.white
+                : colorScheme.onSurface,
           ),
         ),
+        backgroundColor: theme.brightness == Brightness.dark
+            ? Colors.grey[700]
+            : colorScheme.surfaceVariant,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(
+            Icons.arrow_back,
+            color: theme.brightness == Brightness.dark
+                ? Colors.white
+                : colorScheme.onSurface,
+          ),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+      ),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          _buildInfoCard(
+            'About Haraj Cars',
+            'Find the best deals on new and used cars in the USA. Browse thousands of listings from trusted dealers and private sellers.',
+            Icons.car_rental,
+          ),
+          _buildInfoCard(
+            'Features',
+            '• Search and filter cars by brand, year, price\n• Save your favorite cars\n• Browse global car marketplaces\n• Detailed car information and photos',
+            Icons.star,
+          ),
+          _buildInfoCard(
+            'Contact Us',
+            'Email: support@harajcars.com\nPhone: +1 (555) 123-4567\nWebsite: www.harajcars.com',
+            Icons.contact_support,
+          ),
+          _buildInfoCard(
+            'Version',
+            'Version 1.0.0\nBuild 2024.1\nLast updated: January 2024',
+            Icons.info,
+          ),
+          const SizedBox(height: 20),
+          // Settings Section
+          _buildSettingsSection(),
+          const SizedBox(height: 20),
+        ],
       ),
     );
   }

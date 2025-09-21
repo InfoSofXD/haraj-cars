@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../tools/Palette/gradients.dart';
-import '../main/tab_manger.dart';
+import '../screens/main/tab_manger.dart';
 import 'tabs/sing_in_tab.dart';
 import 'tabs/sing_up_tab.dart';
 
@@ -39,10 +39,12 @@ class _SignManagerScreenState extends State<SignManagerScreen>
 
   @override
   Widget build(BuildContext context) {
+    final isLight = Theme.of(context).brightness == Brightness.light;
+
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: LightGradient.main,
+        decoration: BoxDecoration(
+          gradient: isLight ? LightGradient.main : DarkGradient.main,
         ),
         child: SafeArea(
           child: Column(

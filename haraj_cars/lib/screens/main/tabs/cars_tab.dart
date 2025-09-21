@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'dart:ui';
-import '../../models/car.dart';
-import '../../../supabase/supabase_service.dart';
-import '../../services/favorites_service.dart';
-import '../../../tools/connectivity.dart';
-import '../../tools/cards/car_card.dart';
-import '../../tools/cards/auction_cars_card.dart';
-import '../../../tools/Palette/theme.dart' as custom_theme;
-import '../../widgets/filter_widget.dart';
+import '../../../models/car.dart';
+import '../../../../supabase/supabase_service.dart';
+import '../../../services/favorites_service.dart';
+import '../../../../tools/connectivity.dart';
+import '../../../tools/cards/car_card.dart';
+import '../../../tools/cards/auction_cars_card.dart';
+import '../../../../tools/Palette/theme.dart' as custom_theme;
+import '../../../widgets/filter_widget.dart';
+import '../../info_screen.dart';
+import '../../global_sites_screen.dart';
 
 class CarsTab extends StatefulWidget {
   final bool isAdmin;
@@ -15,6 +17,7 @@ class CarsTab extends StatefulWidget {
   final Function(Car) onDeleteCar;
   final Function(Car) onShowCarDetails;
   final Function(Car) onShowStatusUpdate;
+  final PageController? pageController;
 
   const CarsTab({
     Key? key,
@@ -23,6 +26,7 @@ class CarsTab extends StatefulWidget {
     required this.onDeleteCar,
     required this.onShowCarDetails,
     required this.onShowStatusUpdate,
+    this.pageController,
   }) : super(key: key);
 
   @override
@@ -589,10 +593,10 @@ class _CarsTabState extends State<CarsTab> {
         return SingleChildScrollView(
           padding: EdgeInsets.only(
             top: hasActiveFilters
-                ? 300 // 300px for filters
+                ? 300
                 : isSearching
-                    ? 200 // 200px for search only (less than action buttons)
-                    : 116, // 116px for action buttons only
+                    ? 200
+                    : 80,
             bottom: 80,
           ),
           child: Column(
@@ -645,7 +649,7 @@ class _CarsTabState extends State<CarsTab> {
         _priceRange.end != _maxPrice;
 
     return Container(
-      margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+      margin: const EdgeInsets.fromLTRB(16, 8, 16, 3),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(12),
         child: BackdropFilter(
@@ -905,83 +909,61 @@ class _CarsTabState extends State<CarsTab> {
 
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(12),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
-          child: Container(
-            decoration: BoxDecoration(
-              color: theme.brightness == Brightness.dark
-                  ? Colors.grey[700]!.withOpacity(0.3)
-                  : custom_theme.light.shade100.withOpacity(0.3),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: theme.brightness == Brightness.dark
-                    ? Colors.white
-                    : custom_theme.light.shade300,
-                width: 1,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.3),
-                  spreadRadius: 0,
-                  blurRadius: 20,
-                  offset: const Offset(0, 8),
-                ),
-              ],
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                children: [
-                  // Button 1
-                  Expanded(
-                    child: _buildActionButton(
-                      icon: Icons.grid_view,
-                      label: 'Grid View',
-                      onTap: () {
-                        // TODO: Implement grid view
-                      },
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  // Button 2
-                  Expanded(
-                    child: _buildActionButton(
-                      icon: Icons.view_list,
-                      label: 'List View',
-                      onTap: () {
-                        // TODO: Implement list view
-                      },
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  // Button 3
-                  Expanded(
-                    child: _buildActionButton(
-                      icon: Icons.sort,
-                      label: 'Sort',
-                      onTap: () {
-                        // TODO: Implement sort
-                      },
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  // Button 4
-                  Expanded(
-                    child: _buildActionButton(
-                      icon: Icons.tune,
-                      label: 'Advanced',
-                      onTap: () {
-                        // TODO: Implement advanced filters
-                      },
-                    ),
-                  ),
-                ],
-              ),
-            ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          // Button 1
+          _buildActionButton(
+            icon: Icons.gavel,
+            label: 'Toggle Auction',
+            onTap: () {
+              setState(() {
+                _showAuctionList = !_showAuctionList;
+              });
+            },
           ),
-        ),
+          // Button 2
+          _buildActionButton(
+            icon: Icons.public,
+            label: 'Global Sites',
+            onTap: () {
+              // Navigate to global sites screen
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const GlobalSitesScreen(),
+                ),
+              );
+            },
+          ),
+          // Button 3
+          _buildActionButton(
+            icon: Icons.favorite,
+            label: 'Favorites',
+            onTap: () {
+              // Navigate to favorites tab
+              if (widget.pageController != null) {
+                widget.pageController!.animateToPage(
+                  3, // Favorites tab index
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeInOut,
+                );
+              }
+            },
+          ),
+          // Button 4
+          _buildActionButton(
+            icon: Icons.lightbulb,
+            label: 'Info',
+            onTap: () {
+              // Navigate to info screen
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const InfoScreen(),
+                ),
+              );
+            },
+          ),
+        ],
       ),
     );
   }
@@ -995,49 +977,48 @@ class _CarsTabState extends State<CarsTab> {
 
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              theme.colorScheme.primary.withOpacity(0.1),
-              theme.colorScheme.primary.withOpacity(0.05),
-            ],
-          ),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: theme.brightness == Brightness.dark
-                ? Colors.white.withOpacity(0.2)
-                : custom_theme.light.shade300,
-            width: 1,
-          ),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              icon,
-              size: 20,
-              color: theme.brightness == Brightness.dark
-                  ? Colors.white
-                  : custom_theme.light.shade700,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(30),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+          child: Container(
+            width: 60,
+            height: 60,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  theme.colorScheme.primary.withOpacity(0.1),
+                  theme.colorScheme.primary.withOpacity(0.05),
+                ],
+              ),
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: theme.brightness == Brightness.dark
+                    ? Colors.white
+                    : custom_theme.light.shade300,
+                width: 1,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  spreadRadius: 0,
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                fontFamily: 'Tajawal',
+            child: Center(
+              child: Icon(
+                icon,
+                size: 24,
                 color: theme.brightness == Brightness.dark
                     ? Colors.white
                     : custom_theme.light.shade700,
               ),
-              textAlign: TextAlign.center,
             ),
-          ],
+          ),
         ),
       ),
     );

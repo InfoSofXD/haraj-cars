@@ -3,21 +3,21 @@ import 'dart:ui';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_zoom_drawer/flutter_zoom_drawer.dart';
 import 'package:provider/provider.dart';
-import '../models/car.dart';
-import '../../tools/theme_controller.dart';
-import '../../tools/Palette/theme.dart' as custom_theme;
-import '../../supabase/supabase_service.dart';
-import '../tools/dialogs/dialogs.dart';
-import '../widgets/tab_manger_widgets.dart';
-import '../widgets/side_menu.dart';
-import '../screens/add_car_screen.dart';
-import '../screens/edit_car_screen.dart';
-import '../screens/car_scraper.dart';
-import '../screens/car_details_screen.dart';
+import '../../models/car.dart';
+import '../../../tools/theme_controller.dart';
+import '../../../tools/Palette/theme.dart' as custom_theme;
+import '../../../supabase/supabase_service.dart';
+import '../../tools/dialogs/dialogs.dart';
+import '../../widgets/tab_manger_widgets.dart';
+import '../../widgets/side_menu.dart';
+import '../add_car_screen.dart';
+import '../edit_car_screen.dart';
+import '../car_scraper_screen.dart';
+import '../car_details_screen.dart';
 import 'tabs/cars_tab.dart';
 import 'tabs/favorites_tab.dart';
-import 'tabs/global_sites_tab.dart';
-import 'tabs/info_tab.dart';
+import '../global_sites_screen.dart';
+import '../info_screen.dart';
 import 'tabs/account_tab.dart';
 import 'tabs/community_tab.dart';
 import 'tabs/dashboard_tab.dart';
@@ -496,17 +496,14 @@ class _TabMangerScreenState extends State<TabMangerScreen>
                           onDeleteCar: _deleteCar,
                           onShowCarDetails: _showCarDetails,
                           onShowStatusUpdate: _showStatusUpdateDialog,
+                          pageController: _pageController,
                         ),
-                        // Global Sites tab
-                        const GlobalSitesTab(),
                         // Community tab
                         CommunityTab(isAdmin: _isAdmin),
                         // Favorites tab
                         const FavoritesTab(),
                         // Calculator tab
                         const CalculatorTab(),
-                        // Info tab
-                        const InfoTab(),
                         // Account tab
                         const AccountTab(),
                       ],

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../main/tab_manger.dart';
+import '../../screens/main/tab_manger.dart';
 import '../../tools/Palette/theme.dart';
 import 'sing_up_tab.dart';
 
@@ -118,6 +118,8 @@ class _SignInScreenState extends State<SignInScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isLight = Theme.of(context).brightness == Brightness.light;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Column(
@@ -320,7 +322,7 @@ class _SignInScreenState extends State<SignInScreen> {
                       onPressed: _isLoading ? null : _signIn,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.transparent,
-                        foregroundColor: light[500],
+                        foregroundColor: isLight ? light[500] : dark[500],
                         shadowColor: Colors.transparent,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(20),
@@ -332,8 +334,8 @@ class _SignInScreenState extends State<SignInScreen> {
                               height: 24,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
-                                valueColor: const AlwaysStoppedAnimation<Color>(
-                                  Color(0xFF26725A),
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  isLight ? light[500]! : dark[500]!,
                                 ),
                               ),
                             )

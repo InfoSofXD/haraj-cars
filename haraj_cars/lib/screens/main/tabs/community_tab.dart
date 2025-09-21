@@ -3,8 +3,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'dart:ui';
-import '../../tools/cards/post_card.dart';
-import '../../../tools/Palette/theme.dart' as custom_theme;
+import '../../../tools/cards/post_card.dart';
+import '../../../../tools/Palette/theme.dart' as custom_theme;
 
 class CommunityTab extends StatefulWidget {
   final bool isAdmin;

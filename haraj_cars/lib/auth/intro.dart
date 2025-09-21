@@ -81,10 +81,12 @@ class _IntroScreenState extends State<IntroScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isLight = Theme.of(context).brightness == Brightness.light;
+
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: LightGradient.main,
+        decoration: BoxDecoration(
+          gradient: isLight ? LightGradient.main : DarkGradient.main,
         ),
         child: SafeArea(
           child: Column(
@@ -127,7 +129,7 @@ class _IntroScreenState extends State<IntroScreen> {
               ),
 
               // Bottom section with navigation
-              _buildBottomSection(),
+              _buildBottomSection(isLight),
             ],
           ),
         ),
@@ -192,7 +194,7 @@ class _IntroScreenState extends State<IntroScreen> {
     );
   }
 
-  Widget _buildBottomSection() {
+  Widget _buildBottomSection(bool isLight) {
     return Padding(
       padding: const EdgeInsets.all(32.0),
       child: Column(
@@ -228,7 +230,7 @@ class _IntroScreenState extends State<IntroScreen> {
                 onPressed: _nextPage,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.white,
-                  foregroundColor: light[500],
+                  foregroundColor: isLight ? light[500] : dark[500],
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(28),
                   ),
@@ -281,7 +283,7 @@ class _IntroScreenState extends State<IntroScreen> {
                 onPressed: _goToLogin,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.white,
-                  foregroundColor: light[500],
+                  foregroundColor: isLight ? light[500] : dark[500],
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(28),
                   ),

@@ -29,14 +29,17 @@ class CarFeeCalculator {
     'CALCULATION BAHRAIN',
     'CALCULATION OMAN',
     'CALCULATION QATAR',
-    'CALCULATION USA → KSA',
-    'CALCULATION USA → UAE',
+    'CALCULATION USA KSA',
+    'CALCULATION USA UAE',
+    'CALCULATION KSA PLUS',
     'CALCULATION SHIPPING INSURANCE KSA',
     'CALCULATION SHIPPING INSURANCE UAE',
     'CALCULATION SHIPPING INSURANCE KWD',
     'CALCULATION SHIPPING INSURANCE BHD',
     'CALCULATION SHIPPING INSURANCE OMR',
     'CALCULATION SHIPPING INSURANCE QAR',
+    'TRANSFER AMOUNT FROM INSTITUTION',
+    'INVOICE CALCULATION',
   ];
 
   // Input parameters
@@ -52,6 +55,11 @@ class CarFeeCalculator {
         'رسوم خاصة بتخليص السيارة من امريكا (Special Clearance)',
     'insuranceRequired': 'قيمة التأمين المطلوبة من العميل (Insurance Required)',
     'gblInsurance': 'قيمة التأمين ل GBL (GBL Insurance)',
+    'discountPercentage': 'نسبة الخصم (Discount Percentage)',
+    'fileNumber': 'رقم الملف (File Number)',
+    'fullAmountBDAS': 'المبلغ الكامل للفاتورة BDAS (Full Amount Invoice BDAS)',
+    'fullAmountOH': 'المبلغ الكامل للفاتورة OH (Full Amount Invoice OH)',
+    'discountAmount': 'مبلغ الخصم (Discount Amount)',
   };
 
   static String getCurrencyCode(String mode) {
@@ -302,6 +310,162 @@ class CarFeeCalculator {
     };
   }
 
+  static Map<String, dynamic> calculateKSAPlusMode({
+    required String mode,
+    required double deposit,
+    required double carValue,
+    required double auctionFees,
+    required double clearanceFees,
+    required double discountPercentage,
+  }) {
+    final currencyCode = getCurrencyCode(mode);
+    final currencySymbol = getCurrencySymbol(currencyCode);
+
+    // KSA PLUS calculation with discount
+    final carBeforeDeposit = deposit + carValue + auctionFees + clearanceFees;
+    final carAfterDeposit = carBeforeDeposit - deposit;
+    final discountAmount = carAfterDeposit * (discountPercentage / 100);
+    final carAfterDiscount = carAfterDeposit - discountAmount;
+    final customsAmount = carAfterDiscount * customsRates['KSA']!;
+    final finalPrice = carAfterDiscount + customsAmount;
+
+    return {
+      'deposit': {
+        'usd': deposit,
+        'local': convertToLocalCurrency(deposit, currencyCode),
+        'currency': currencySymbol,
+      },
+      'carValue': {
+        'usd': carValue,
+        'local': convertToLocalCurrency(carValue, currencyCode),
+        'currency': currencySymbol,
+      },
+      'auctionFees': {
+        'usd': auctionFees,
+        'local': convertToLocalCurrency(auctionFees, currencyCode),
+        'currency': currencySymbol,
+      },
+      'clearanceFees': {
+        'usd': clearanceFees,
+        'local': convertToLocalCurrency(clearanceFees, currencyCode),
+        'currency': currencySymbol,
+      },
+      'carBeforeDeposit': {
+        'usd': carBeforeDeposit,
+        'local': convertToLocalCurrency(carBeforeDeposit, currencyCode),
+        'currency': currencySymbol,
+      },
+      'carAfterDeposit': {
+        'usd': carAfterDeposit,
+        'local': convertToLocalCurrency(carAfterDeposit, currencyCode),
+        'currency': currencySymbol,
+      },
+      'discountAmount': {
+        'usd': discountAmount,
+        'local': convertToLocalCurrency(discountAmount, currencyCode),
+        'currency': currencySymbol,
+        'percentage': discountPercentage,
+      },
+      'carAfterDiscount': {
+        'usd': carAfterDiscount,
+        'local': convertToLocalCurrency(carAfterDiscount, currencyCode),
+        'currency': currencySymbol,
+      },
+      'customs': {
+        'usd': customsAmount,
+        'local': convertToLocalCurrency(customsAmount, currencyCode),
+        'currency': currencySymbol,
+        'rate': customsRates['KSA']!,
+      },
+      'finalPrice': {
+        'usd': finalPrice,
+        'local': convertToLocalCurrency(finalPrice, currencyCode),
+        'currency': currencySymbol,
+      },
+      'currencyCode': currencyCode,
+    };
+  }
+
+  static Map<String, dynamic> calculateTransferAmountMode({
+    required String mode,
+    required double carValue,
+    required double auctionFees,
+    required double clearanceFees,
+  }) {
+    final currencyCode = getCurrencyCode(mode);
+    final currencySymbol = getCurrencySymbol(currencyCode);
+
+    // Transfer amount calculation
+    final transferAmount = carValue + auctionFees + clearanceFees;
+
+    return {
+      'carValue': {
+        'usd': carValue,
+        'local': convertToLocalCurrency(carValue, currencyCode),
+        'currency': currencySymbol,
+      },
+      'auctionFees': {
+        'usd': auctionFees,
+        'local': convertToLocalCurrency(auctionFees, currencyCode),
+        'currency': currencySymbol,
+      },
+      'clearanceFees': {
+        'usd': clearanceFees,
+        'local': convertToLocalCurrency(clearanceFees, currencyCode),
+        'currency': currencySymbol,
+      },
+      'transferAmount': {
+        'usd': transferAmount,
+        'local': convertToLocalCurrency(transferAmount, currencyCode),
+        'currency': currencySymbol,
+      },
+      'currencyCode': currencyCode,
+    };
+  }
+
+  static Map<String, dynamic> calculateInvoiceMode({
+    required String mode,
+    required double fileNumber,
+    required double fullAmountBDAS,
+    required double fullAmountOH,
+    required double discountAmount,
+  }) {
+    final currencyCode = getCurrencyCode(mode);
+    final currencySymbol = getCurrencySymbol(currencyCode);
+
+    // Invoice calculation
+    final finalAmountKSA = fullAmountOH - discountAmount;
+
+    return {
+      'fileNumber': {
+        'usd': fileNumber,
+        'local': convertToLocalCurrency(fileNumber, currencyCode),
+        'currency': currencySymbol,
+      },
+      'fullAmountBDAS': {
+        'usd': fullAmountBDAS,
+        'local': convertToLocalCurrency(fullAmountBDAS, currencyCode),
+        'currency': currencySymbol,
+      },
+      'fullAmountOH': {
+        'usd': fullAmountOH,
+        'local': convertToLocalCurrency(fullAmountOH, currencyCode),
+        'currency': currencySymbol,
+      },
+      'discountAmount': {
+        'usd': discountAmount,
+        'local': convertToLocalCurrency(discountAmount, currencyCode),
+        'currency': currencySymbol,
+      },
+      'finalAmountKSA': {
+        'usd': finalAmountKSA,
+        'local': convertToLocalCurrency(finalAmountKSA, currencyCode),
+        'currency': currencySymbol,
+      },
+      'currencyCode': currencyCode,
+    };
+  }
+
   static Map<String, dynamic> calculate({
     required String mode,
     required Map<String, double> inputs,
@@ -323,6 +487,30 @@ class CarFeeCalculator {
         titleFees: inputs['titleFees'] ?? 0,
         domesticShipping: inputs['domesticShipping'] ?? 0,
         specialClearance: inputs['specialClearance'] ?? 0,
+      );
+    } else if (mode == 'CALCULATION KSA PLUS') {
+      return calculateKSAPlusMode(
+        mode: mode,
+        deposit: inputs['deposit'] ?? 0,
+        carValue: inputs['carValue'] ?? 0,
+        auctionFees: inputs['auctionFees'] ?? 0,
+        clearanceFees: inputs['clearanceFees'] ?? 0,
+        discountPercentage: inputs['discountPercentage'] ?? 0,
+      );
+    } else if (mode == 'TRANSFER AMOUNT FROM INSTITUTION') {
+      return calculateTransferAmountMode(
+        mode: mode,
+        carValue: inputs['carValue'] ?? 0,
+        auctionFees: inputs['auctionFees'] ?? 0,
+        clearanceFees: inputs['clearanceFees'] ?? 0,
+      );
+    } else if (mode == 'INVOICE CALCULATION') {
+      return calculateInvoiceMode(
+        mode: mode,
+        fileNumber: inputs['fileNumber'] ?? 0,
+        fullAmountBDAS: inputs['fullAmountBDAS'] ?? 0,
+        fullAmountOH: inputs['fullAmountOH'] ?? 0,
+        discountAmount: inputs['discountAmount'] ?? 0,
       );
     } else {
       return calculateStandardMode(
@@ -347,6 +535,18 @@ class CarFeeCalculator {
         'domesticShipping',
         'specialClearance'
       ];
+    } else if (mode == 'CALCULATION KSA PLUS') {
+      return [
+        'deposit',
+        'carValue',
+        'auctionFees',
+        'clearanceFees',
+        'discountPercentage'
+      ];
+    } else if (mode == 'TRANSFER AMOUNT FROM INSTITUTION') {
+      return ['carValue', 'auctionFees', 'clearanceFees'];
+    } else if (mode == 'INVOICE CALCULATION') {
+      return ['fileNumber', 'fullAmountBDAS', 'fullAmountOH', 'discountAmount'];
     } else {
       return ['deposit', 'carValue', 'auctionFees', 'clearanceFees'];
     }

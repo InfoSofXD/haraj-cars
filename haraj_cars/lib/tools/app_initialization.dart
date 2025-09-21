@@ -63,7 +63,7 @@ class AppInitialization {
 
     WindowOptions windowOptions = const WindowOptions(
       size: Size(650, 1050),
-      minimumSize: Size(650, 768),
+      minimumSize: Size(300, 768),
       center: false,
       title: 'Haraj Ohio',
       backgroundColor: Colors.transparent,

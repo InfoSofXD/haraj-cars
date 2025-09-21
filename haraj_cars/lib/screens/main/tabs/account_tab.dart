@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'dart:ui';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../auth/sing_manger.dart';
-import '../../../tools/Palette/theme.dart' as custom_theme;
+import '../../../auth/sing_manger.dart';
+import '../../../../tools/Palette/theme.dart' as custom_theme;
 
 class AccountTab extends StatefulWidget {
   const AccountTab({Key? key}) : super(key: key);

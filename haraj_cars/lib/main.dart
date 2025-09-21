@@ -5,7 +5,7 @@ import 'dart:ui' as ui;
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:haraj/main/tab_manger.dart';
+import 'package:haraj/screens/main/tab_manger.dart';
 import 'package:haraj/tools/app_initialization.dart';
 import 'package:haraj/tools/language/app_localizations.dart';
 import 'package:haraj/tools/language/language_provider.dart';

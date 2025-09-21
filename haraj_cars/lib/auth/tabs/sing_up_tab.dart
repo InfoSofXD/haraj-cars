@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../main/tab_manger.dart';
+import '../../screens/main/tab_manger.dart';
 import '../../tools/Palette/theme.dart';
 
 class SignUpScreen extends StatefulWidget {
@@ -118,6 +118,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isLight = Theme.of(context).brightness == Brightness.light;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Column(
@@ -458,7 +460,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       onPressed: _isLoading ? null : _signUp,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.transparent,
-                        foregroundColor: light[500],
+                        foregroundColor: isLight ? light[500] : dark[500],
                         shadowColor: Colors.transparent,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(20),
@@ -470,8 +472,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               height: 24,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
-                                valueColor: const AlwaysStoppedAnimation<Color>(
-                                  Color(0xFF26725A),
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  isLight ? light[500]! : dark[500]!,
                                 ),
                               ),
                             )

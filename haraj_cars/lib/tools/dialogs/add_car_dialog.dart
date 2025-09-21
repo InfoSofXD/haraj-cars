@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../screens/add_car_screen.dart';
-import '../../screens/car_scraper.dart';
+import '../../screens/car_scraper_screen.dart';
 import 'modern_dialog_base.dart';
 
 class AddCarDialog extends StatelessWidget {

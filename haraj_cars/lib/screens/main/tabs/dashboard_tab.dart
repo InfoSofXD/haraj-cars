@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'dart:ui';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../../tools/Palette/theme.dart' as custom_theme;
-import '../../../supabase/supabase_service.dart';
-import '../../../tools/dialogs/add_car_dialog.dart';
-import '../../../tools/bottom_sheets/users_bottom_sheet.dart';
-import '../../../tools/bottom_sheets/workers_bottom_sheet.dart';
+import '../../../../tools/Palette/theme.dart' as custom_theme;
+import '../../../../supabase/supabase_service.dart';
+import '../../../../tools/dialogs/add_car_dialog.dart';
+import '../../../../tools/bottom_sheets/users_bottom_sheet.dart';
+import '../../../../tools/bottom_sheets/workers_bottom_sheet.dart';
 
 class DashboardTab extends StatefulWidget {
   final Function(int) onNavigateToTab;

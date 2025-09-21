@@ -33,11 +33,27 @@ class _AuctionCarsCardState extends State<AuctionCarsCard> {
   late PageController _pageController;
   int _currentPage = 0;
   int _cardsPerPage = 3;
+  double _cardWidth = 180;
 
   @override
   void initState() {
     super.initState();
     _pageController = PageController();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _calculateCardDimensions();
+    });
+  }
+
+  void _calculateCardDimensions() {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final horizontalPadding = 32.0; // Account for screen padding
+    final availableWidth = screenWidth - horizontalPadding;
+
+    // Always show 3 cards per page, just adjust card width
+    _cardsPerPage = 3;
+    _cardWidth = ((availableWidth - 60) / 3).clamp(120.0, 200.0);
+
+    setState(() {});
   }
 
   @override
@@ -82,8 +98,13 @@ class _AuctionCarsCardState extends State<AuctionCarsCard> {
       return const SizedBox.shrink();
     }
 
+    // Recalculate dimensions if screen size changed
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _calculateCardDimensions();
+    });
+
     return SizedBox(
-      height: 200, // Smaller height for the card
+      height: 200, // Fixed height
       child: Stack(
         children: [
           // Cards Container
@@ -98,7 +119,7 @@ class _AuctionCarsCardState extends State<AuctionCarsCard> {
             itemBuilder: (context, pageIndex) {
               final pageCars = _getPageCars(pageIndex);
               return Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children:
                     pageCars.map((car) => _buildCarCard(car, theme)).toList(),
               );
@@ -194,8 +215,8 @@ class _AuctionCarsCardState extends State<AuctionCarsCard> {
 
   Widget _buildCarCard(Car car, ThemeData theme) {
     return Container(
-      width: 180, // Smaller width
-      height: 180, // Smaller height
+      width: _cardWidth, // Dynamic width based on screen size
+      height: 180, // Fixed height
       margin: const EdgeInsets.symmetric(horizontal: 8),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
@@ -310,19 +331,27 @@ class _AuctionCarsCardState extends State<AuctionCarsCard> {
               child: GestureDetector(
                 onTap: () => widget.onToggleFavorite(car),
                 child: Container(
-                  padding: const EdgeInsets.all(6),
+                  padding: const EdgeInsets.all(5),
                   decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.5),
+                    color: widget.favoriteCarIds.contains(car.carId)
+                        ? Colors.red.withOpacity(0.35)
+                        : Colors.grey.withOpacity(0.35),
                     borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: widget.favoriteCarIds.contains(car.carId)
+                          ? Colors.red
+                          : Colors.white,
+                      width: 0.5,
+                    ),
                   ),
                   child: Icon(
                     widget.favoriteCarIds.contains(car.carId)
                         ? Icons.favorite
                         : Icons.favorite_border,
+                    size: 20,
                     color: widget.favoriteCarIds.contains(car.carId)
                         ? Colors.red
                         : Colors.white,
-                    size: 16,
                   ),
                 ),
               ),
