@@ -1,0 +1,88 @@
+name: haraj
+description: Haraj Ohio
+publish_to: 'Cubix'
+version: 0.0.1
+
+environment:
+  sdk: '>=3.1.5 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Core Supabase
+  supabase_flutter: ^2.3.4
+  connectivity_plus: ^5.0.2
+  
+  # HTTP requests
+  http: ^1.1.0
+
+  # Tools
+  uuid: ^4.2.2
+  shared_preferences: ^2.2.2
+  get_it: ^7.6.4
+
+  # UI Components
+  flutter_zoom_drawer: ^3.0.0
+  dyn_mouse_scroll: ^1.0.7
+
+  # Media & Files
+  image_picker: ^1.0.7
+  camera: ^0.10.0
+  file_picker: ^5.5.0
+  image: ^4.0.17
+
+  # Device Features
+  permission_handler: ^11.0.0
+  vibration: ^1.8.4
+  device_info_plus: ^9.1.2
+  url_launcher: ^6.2.4
+  intl: ^0.18.1
+  geolocator: ^10.1.0
+  geocoding: ^2.1.0
+  flutter_bloc: ^9.1.1
+
+  # Languages
+  flutter_localizations:
+    sdk: flutter
+  easy_localization: ^3.0.7+1
+
+
+  # App Appearance
+  flutter_native_splash: ^2.3.3
+  flutter_launcher_icons: ^0.13.1
+  window_manager: ^0.4.3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^2.0.0
+
+flutter:
+  assets:
+  # App logo & splash icon & App icon
+
+    # App Logo & Splash & Icon
+    - assets/logo/haraj_logo.png
+    - assets/logo/app_icon.png
+    - assets/splash/splash_icon.png
+    - assets/splash/branding.png
+
+    # Language files
+    - assets/langs/
+
+    # Env
+    - .env
+
+  # this is for Fonts
+  fonts:
+    # Tajawal
+    - family: Tajawal
+      fonts:
+        - asset: fonts/Tajawal-Medium.ttf
+
+  # Material Design
+  uses-material-design: true
+
+  # Languages
+  generate: true
