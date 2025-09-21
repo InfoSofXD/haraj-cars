@@ -1,6 +1,6 @@
 {
-    "name": "Haraj Ohio",
-    "short_name": "Haraj Ohio",
+    "name": "haraj_cars",
+    "short_name": "haraj_cars",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#26725A",

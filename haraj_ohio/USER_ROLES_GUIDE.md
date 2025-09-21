@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Haraj Ohio application now implements a comprehensive user role system with three distinct user types, each with specific permissions and access levels.
+The Haraj Cars application now implements a comprehensive user role system with three distinct user types, each with specific permissions and access levels.
 
 ## User Roles
 

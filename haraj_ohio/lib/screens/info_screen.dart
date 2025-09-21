@@ -116,7 +116,7 @@ class _InfoScreenState extends State<InfoScreen> {
         padding: const EdgeInsets.all(16),
         children: [
           _buildInfoCard(
-            'About Haraj Ohio',
+            'About Haraj Cars',
             'Find the best deals on new and used cars in the USA. Browse thousands of listings from trusted dealers and private sellers.',
             Icons.car_rental,
           ),

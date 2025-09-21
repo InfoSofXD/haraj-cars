@@ -1,7 +1,7 @@
 -- =============================================
--- HARAJ OHIO DATABASE SCHEMA
+-- HARAJ CARS DATABASE SCHEMA
 -- =============================================
--- This file contains the complete database schema for the Haraj Ohio application
+-- This file contains the complete database schema for the Haraj Cars application
 -- Run this script in your Supabase SQL Editor to set up the entire database
 
 -- =============================================

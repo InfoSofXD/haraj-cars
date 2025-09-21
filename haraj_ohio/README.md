@@ -1,4 +1,4 @@
-# Haraj Ohio - Flutter App
+# Haraj Cars - Flutter App
 
 A Flutter application for browsing and managing car listings using Supabase as the backend.
 
@@ -24,7 +24,7 @@ A Flutter application for browsing and managing car listings using Supabase as t
 
 ```bash
 git clone <repository-url>
-cd haraj_ohio
+cd haraj_cars
 ```
 
 ### 2. Install Dependencies

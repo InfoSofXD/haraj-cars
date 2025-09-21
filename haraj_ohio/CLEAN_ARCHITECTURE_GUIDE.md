@@ -1,8 +1,8 @@
-# 🏗️ Clean Architecture Guide for Haraj Ohio
+# 🏗️ Clean Architecture Guide for Haraj Cars
 
 ## Overview
 
-This document outlines the clean architecture implementation for the Haraj Ohio Flutter application, designed to support three distinct user types with proper separation of concerns and maintainable code structure.
+This document outlines the clean architecture implementation for the Haraj Cars Flutter application, designed to support three distinct user types with proper separation of concerns and maintainable code structure.
 
 ## 🎯 User Types & Permissions
 

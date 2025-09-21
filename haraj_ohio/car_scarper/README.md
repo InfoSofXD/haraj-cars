@@ -1,6 +1,6 @@
 # Car Scraper Module
 
-This module contains the car scraping functionality for the Haraj Ohio app, organized by website.
+This module contains the car scraping functionality for the Haraj Cars app, organized by website.
 
 ## Structure
 
