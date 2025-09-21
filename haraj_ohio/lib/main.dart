@@ -77,6 +77,9 @@ void main() async {
 
   // Show window only after app is initialized and first frame is rendered (desktop only)
   await AppInitialization.showDesktopWindow();
+
+  // Remove native splash screen after app is fully initialized
+  AppInitialization.removeSplashScreen();
 }
 
 class MainApp extends StatefulWidget {

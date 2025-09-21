@@ -85,9 +85,8 @@ class AppInitialization {
 
   static void removeSplashScreen() {
     if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
-      Future.delayed(const Duration(seconds: 2), () {
-        FlutterNativeSplash.remove();
-      });
+      // Remove splash screen immediately for mobile
+      FlutterNativeSplash.remove();
     }
 
     // For web, remove splash screen immediately
