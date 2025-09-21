@@ -128,8 +128,10 @@ class BrandFilterDialog extends StatelessWidget {
               child: Icon(
                 Icons.directions_car,
                 color: isSelected
-                    ? colorScheme.primary
-                    : colorScheme.primary.withOpacity(0.7),
+                    ? (isDark ? Colors.white : colorScheme.primary)
+                    : (isDark
+                        ? Colors.grey[300]
+                        : colorScheme.primary.withOpacity(0.7)),
                 size: 20,
               ),
             ),
@@ -144,7 +146,7 @@ class BrandFilterDialog extends StatelessWidget {
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
                       color: isSelected
-                          ? colorScheme.primary
+                          ? (isDark ? Colors.white : colorScheme.primary)
                           : isDark
                               ? Colors.white
                               : Colors.grey[800],
@@ -177,7 +179,7 @@ class BrandFilterDialog extends StatelessWidget {
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
                   color: isSelected
-                      ? colorScheme.primary
+                      ? (isDark ? Colors.white : colorScheme.primary)
                       : isDark
                           ? Colors.grey[300]
                           : Colors.grey[700],

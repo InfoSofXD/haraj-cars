@@ -6,6 +6,8 @@ import 'package:image_picker/image_picker.dart';
 import 'package:uuid/uuid.dart';
 import '../models/car.dart';
 import '../../supabase/supabase_service.dart';
+import '../tools/Palette/theme.dart' as custom_theme;
+import '../tools/Palette/gradients.dart';
 
 class EditCarScreen extends StatefulWidget {
   final Car car;
@@ -374,17 +376,28 @@ class _EditCarScreenState extends State<EditCarScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Colors.white.withOpacity(0.1),
-            Colors.white.withOpacity(0.05),
-          ],
-        ),
+        gradient: Theme.of(context).brightness == Brightness.light
+            ? LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  custom_theme.light.shade100,
+                  custom_theme.light.shade200,
+                ],
+              )
+            : LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  custom_theme.dark.shade700,
+                  custom_theme.dark.shade600,
+                ],
+              ),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: Colors.white.withOpacity(0.2),
+          color: Theme.of(context).brightness == Brightness.light
+              ? custom_theme.light.shade300
+              : custom_theme.dark.shade600,
           width: 1,
         ),
       ),
@@ -392,16 +405,20 @@ class _EditCarScreenState extends State<EditCarScreen> {
         children: [
           Icon(
             icon,
-            color: Colors.white,
+            color: Theme.of(context).brightness == Brightness.light
+                ? custom_theme.light.shade600
+                : custom_theme.dark.shade300,
             size: 24,
           ),
           const SizedBox(width: 12),
           Text(
             title,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: Colors.white,
+              color: Theme.of(context).brightness == Brightness.light
+                  ? custom_theme.light.shade900
+                  : custom_theme.dark.shade100,
               fontFamily: 'Tajawal',
             ),
           ),
@@ -494,16 +511,10 @@ class _EditCarScreenState extends State<EditCarScreen> {
           children: [
             // Custom App Bar
             Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Color(0xFF1565C0),
-                    Color(0xFF1976D2),
-                    Color(0xFF1E88E5),
-                  ],
-                ),
+              decoration: BoxDecoration(
+                gradient: Theme.of(context).brightness == Brightness.light
+                    ? LightGradient.main
+                    : DarkGradient.main,
               ),
               child: Container(
                 height: 60,
@@ -584,17 +595,30 @@ class _EditCarScreenState extends State<EditCarScreen> {
                           height: 200,
                           width: double.infinity,
                           decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                              colors: [
-                                Colors.black.withOpacity(0.1),
-                                Colors.black.withOpacity(0.05),
-                              ],
-                            ),
+                            gradient:
+                                Theme.of(context).brightness == Brightness.light
+                                    ? LinearGradient(
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                        colors: [
+                                          custom_theme.light.shade50,
+                                          custom_theme.light.shade100,
+                                        ],
+                                      )
+                                    : LinearGradient(
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                        colors: [
+                                          custom_theme.dark.shade800,
+                                          custom_theme.dark.shade700,
+                                        ],
+                                      ),
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
-                              color: Colors.black.withOpacity(0.2),
+                              color: Theme.of(context).brightness ==
+                                      Brightness.light
+                                  ? custom_theme.light.shade300
+                                  : custom_theme.dark.shade600,
                               width: 1,
                             ),
                             boxShadow: [
@@ -633,12 +657,15 @@ class _EditCarScreenState extends State<EditCarScreen> {
                       const SizedBox(height: 24),
 
                       // Other Images Section
-                      const Text(
+                      Text(
                         'Additional Images',
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                          color:
+                              Theme.of(context).brightness == Brightness.light
+                                  ? custom_theme.light.shade900
+                                  : custom_theme.dark.shade100,
                           fontFamily: 'Tajawal',
                         ),
                       ),
@@ -647,19 +674,31 @@ class _EditCarScreenState extends State<EditCarScreen> {
                         children: [
                           Container(
                             decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                                colors: [
-                                  const Color(0xFF4CAF50).withOpacity(0.8),
-                                  const Color(0xFF2E7D32).withOpacity(0.9),
-                                ],
-                              ),
+                              gradient: Theme.of(context).brightness ==
+                                      Brightness.light
+                                  ? LinearGradient(
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                      colors: [
+                                        Colors.green.shade400,
+                                        Colors.green.shade600,
+                                      ],
+                                    )
+                                  : LinearGradient(
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                      colors: [
+                                        Colors.green.shade600,
+                                        Colors.green.shade800,
+                                      ],
+                                    ),
                               borderRadius: BorderRadius.circular(12),
                               boxShadow: [
                                 BoxShadow(
-                                  color:
-                                      const Color(0xFF4CAF50).withOpacity(0.3),
+                                  color: Theme.of(context).brightness ==
+                                          Brightness.light
+                                      ? Colors.green.shade400.withOpacity(0.3)
+                                      : Colors.green.shade600.withOpacity(0.3),
                                   spreadRadius: 0,
                                   blurRadius: 10,
                                   offset: const Offset(0, 4),
@@ -686,7 +725,10 @@ class _EditCarScreenState extends State<EditCarScreen> {
                             Text(
                               '${(_otherImages.length + (widget.car.otherImages?.length ?? 0))} image(s)',
                               style: TextStyle(
-                                color: Colors.white.withOpacity(0.8),
+                                color: Theme.of(context).brightness ==
+                                        Brightness.light
+                                    ? custom_theme.light.shade700
+                                    : custom_theme.dark.shade300,
                                 fontFamily: 'Tajawal',
                               ),
                             ),
@@ -1357,22 +1399,20 @@ class _EditCarScreenState extends State<EditCarScreen> {
                         width: double.infinity,
                         height: 56,
                         decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            colors: [
-                              const Color(0xFF2196F3).withOpacity(0.8),
-                              const Color(0xFF1976D2).withOpacity(0.9),
-                              const Color(0xFF1565C0).withOpacity(0.8),
-                            ],
-                          ),
+                          color:
+                              Theme.of(context).brightness == Brightness.light
+                                  ? custom_theme.light.shade600
+                                  : custom_theme.dark.shade600,
                           borderRadius: BorderRadius.circular(12),
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(0xFF2196F3).withOpacity(0.4),
+                              color: Theme.of(context).brightness ==
+                                      Brightness.light
+                                  ? custom_theme.light.shade400.withOpacity(0.3)
+                                  : custom_theme.dark.shade400.withOpacity(0.3),
                               spreadRadius: 0,
-                              blurRadius: 15,
-                              offset: const Offset(0, 4),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
                             ),
                           ],
                         ),
@@ -1424,13 +1464,17 @@ class _EditCarScreenState extends State<EditCarScreen> {
         Icon(
           Icons.add_a_photo,
           size: 60,
-          color: Colors.white.withOpacity(0.7),
+          color: Theme.of(context).brightness == Brightness.light
+              ? custom_theme.light.shade700
+              : custom_theme.dark.shade300,
         ),
         const SizedBox(height: 8),
         Text(
           'Tap to change image',
           style: TextStyle(
-            color: Colors.white.withOpacity(0.7),
+            color: Theme.of(context).brightness == Brightness.light
+                ? custom_theme.light.shade700
+                : custom_theme.dark.shade300,
             fontSize: 16,
             fontFamily: 'Tajawal',
           ),

@@ -368,20 +368,20 @@ class TabManagerWidgets {
                           isAdmin ? 1 : 0,
                           currentIndex == (isAdmin ? 1 : 0),
                           onTabTapped),
-                      // Community tab
-                      buildBottomNavItem(context, Icons.groups, isAdmin ? 2 : 1,
-                          currentIndex == (isAdmin ? 2 : 1), onTabTapped),
-                      // Favorites tab
-                      buildBottomNavItem(
-                          context,
-                          Icons.favorite,
-                          isAdmin ? 3 : 2,
-                          currentIndex == (isAdmin ? 3 : 2),
-                          onTabTapped),
                       // Calculator tab
                       buildBottomNavItem(
                           context,
                           Icons.calculate,
+                          isAdmin ? 2 : 1,
+                          currentIndex == (isAdmin ? 2 : 1),
+                          onTabTapped),
+                      // Community tab
+                      buildBottomNavItem(context, Icons.groups, isAdmin ? 3 : 2,
+                          currentIndex == (isAdmin ? 3 : 2), onTabTapped),
+                      // Favorites tab
+                      buildBottomNavItem(
+                          context,
+                          Icons.favorite,
                           isAdmin ? 4 : 3,
                           currentIndex == (isAdmin ? 4 : 3),
                           onTabTapped),

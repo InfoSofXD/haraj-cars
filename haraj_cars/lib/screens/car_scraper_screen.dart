@@ -3,6 +3,8 @@ import 'package:uuid/uuid.dart';
 import '../services/car_scraper_service.dart';
 import '../../supabase/supabase_service.dart';
 import '../models/car.dart';
+import '../tools/Palette/theme.dart' as custom_theme;
+import '../tools/Palette/gradients.dart';
 import 'dart:convert';
 
 class CarScraper extends StatefulWidget {
@@ -444,10 +446,12 @@ class _CarScraperState extends State<CarScraper> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isDark ? Colors.grey[700] : Colors.grey[50],
+        color: isDark ? custom_theme.dark.shade700 : custom_theme.light.shade50,
         borderRadius: BorderRadius.circular(12),
-        border:
-            Border.all(color: isDark ? Colors.grey[600]! : Colors.grey[300]!),
+        border: Border.all(
+          color:
+              isDark ? custom_theme.dark.shade600 : custom_theme.light.shade300,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -457,7 +461,9 @@ class _CarScraperState extends State<CarScraper> {
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
-              color: isDark ? Colors.blue[300] : Colors.blue,
+              color: isDark
+                  ? custom_theme.dark.shade300
+                  : custom_theme.light.shade600,
             ),
           ),
           const SizedBox(height: 12),
@@ -477,26 +483,45 @@ class _CarScraperState extends State<CarScraper> {
     return TextField(
       controller: controller,
       keyboardType: keyboardType,
-      style: TextStyle(color: isDark ? Colors.white : Colors.black87),
+      style: TextStyle(
+        color:
+            isDark ? custom_theme.dark.shade100 : custom_theme.light.shade900,
+      ),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle:
-            TextStyle(color: isDark ? Colors.grey[300] : Colors.grey[600]),
-        prefixIcon: Icon(icon, color: isDark ? Colors.blue[300] : Colors.blue),
+        labelStyle: TextStyle(
+          color:
+              isDark ? custom_theme.dark.shade300 : custom_theme.light.shade600,
+        ),
+        prefixIcon: Icon(
+          icon,
+          color:
+              isDark ? custom_theme.dark.shade300 : custom_theme.light.shade600,
+        ),
         border: OutlineInputBorder(
-          borderSide:
-              BorderSide(color: isDark ? Colors.grey[600]! : Colors.grey[400]!),
+          borderSide: BorderSide(
+            color: isDark
+                ? custom_theme.dark.shade600
+                : custom_theme.light.shade400,
+          ),
         ),
         enabledBorder: OutlineInputBorder(
-          borderSide:
-              BorderSide(color: isDark ? Colors.grey[600]! : Colors.grey[400]!),
+          borderSide: BorderSide(
+            color: isDark
+                ? custom_theme.dark.shade600
+                : custom_theme.light.shade400,
+          ),
         ),
         focusedBorder: OutlineInputBorder(
-          borderSide:
-              BorderSide(color: isDark ? Colors.blue[300]! : Colors.blue),
+          borderSide: BorderSide(
+            color: isDark
+                ? custom_theme.dark.shade300
+                : custom_theme.light.shade600,
+          ),
         ),
         filled: true,
-        fillColor: isDark ? Colors.grey[800] : Colors.white,
+        fillColor:
+            isDark ? custom_theme.dark.shade800 : custom_theme.light.shade50,
       ),
     );
   }
@@ -513,33 +538,53 @@ class _CarScraperState extends State<CarScraper> {
 
     return DropdownButtonFormField<String>(
       value: safeValue,
-      style: TextStyle(color: isDark ? Colors.white : Colors.black87),
+      style: TextStyle(
+        color:
+            isDark ? custom_theme.dark.shade100 : custom_theme.light.shade900,
+      ),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle:
-            TextStyle(color: isDark ? Colors.grey[300] : Colors.grey[600]),
+        labelStyle: TextStyle(
+          color:
+              isDark ? custom_theme.dark.shade300 : custom_theme.light.shade600,
+        ),
         border: OutlineInputBorder(
-          borderSide:
-              BorderSide(color: isDark ? Colors.grey[600]! : Colors.grey[400]!),
+          borderSide: BorderSide(
+            color: isDark
+                ? custom_theme.dark.shade600
+                : custom_theme.light.shade400,
+          ),
         ),
         enabledBorder: OutlineInputBorder(
-          borderSide:
-              BorderSide(color: isDark ? Colors.grey[600]! : Colors.grey[400]!),
+          borderSide: BorderSide(
+            color: isDark
+                ? custom_theme.dark.shade600
+                : custom_theme.light.shade400,
+          ),
         ),
         focusedBorder: OutlineInputBorder(
-          borderSide:
-              BorderSide(color: isDark ? Colors.blue[300]! : Colors.blue),
+          borderSide: BorderSide(
+            color: isDark
+                ? custom_theme.dark.shade300
+                : custom_theme.light.shade600,
+          ),
         ),
         filled: true,
-        fillColor: isDark ? Colors.grey[800] : Colors.white,
+        fillColor:
+            isDark ? custom_theme.dark.shade800 : custom_theme.light.shade50,
       ),
-      dropdownColor: isDark ? Colors.grey[800] : Colors.white,
+      dropdownColor:
+          isDark ? custom_theme.dark.shade800 : custom_theme.light.shade50,
       items: items.map((String item) {
         return DropdownMenuItem<String>(
           value: item,
           child: Text(
             item,
-            style: TextStyle(color: isDark ? Colors.white : Colors.black87),
+            style: TextStyle(
+              color: isDark
+                  ? custom_theme.dark.shade100
+                  : custom_theme.light.shade900,
+            ),
           ),
         );
       }).toList(),
@@ -578,16 +623,10 @@ class _CarScraperState extends State<CarScraper> {
             children: [
               // Custom App Bar
               Container(
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      Color(0xFF1565C0),
-                      Color(0xFF1976D2),
-                      Color(0xFF1E88E5),
-                    ],
-                  ),
+                decoration: BoxDecoration(
+                  gradient: Theme.of(context).brightness == Brightness.light
+                      ? LightGradient.main
+                      : DarkGradient.main,
                 ),
                 child: Container(
                   height: 60,
@@ -654,24 +693,30 @@ class _CarScraperState extends State<CarScraper> {
                       // URL Input Section
                       Container(
                         decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            colors: isDark
-                                ? [
-                                    Colors.grey[800]!.withOpacity(0.8),
-                                    Colors.grey[700]!.withOpacity(0.6),
-                                  ]
-                                : [
-                                    Colors.white.withOpacity(0.1),
-                                    Colors.white.withOpacity(0.05),
-                                  ],
-                          ),
+                          gradient:
+                              Theme.of(context).brightness == Brightness.light
+                                  ? LinearGradient(
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                      colors: [
+                                        custom_theme.light.shade50,
+                                        custom_theme.light.shade100,
+                                      ],
+                                    )
+                                  : LinearGradient(
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                      colors: [
+                                        custom_theme.dark.shade800,
+                                        custom_theme.dark.shade700,
+                                      ],
+                                    ),
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: isDark
-                                ? Colors.grey[600]!.withOpacity(0.3)
-                                : Colors.white.withOpacity(0.2),
+                            color:
+                                Theme.of(context).brightness == Brightness.light
+                                    ? custom_theme.light.shade300
+                                    : custom_theme.dark.shade600,
                             width: 1,
                           ),
                           boxShadow: [
@@ -697,7 +742,10 @@ class _CarScraperState extends State<CarScraper> {
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
                                   fontFamily: 'Tajawal',
-                                  color: isDark ? Colors.white : Colors.black87,
+                                  color: Theme.of(context).brightness ==
+                                          Brightness.light
+                                      ? custom_theme.light.shade900
+                                      : custom_theme.dark.shade100,
                                 ),
                               ),
                               const SizedBox(height: 8),
@@ -728,7 +776,10 @@ class _CarScraperState extends State<CarScraper> {
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
                                   fontFamily: 'Tajawal',
-                                  color: isDark ? Colors.white : Colors.black87,
+                                  color: Theme.of(context).brightness ==
+                                          Brightness.light
+                                      ? custom_theme.light.shade900
+                                      : custom_theme.dark.shade100,
                                 ),
                               ),
                               const SizedBox(height: 8),
@@ -748,21 +799,35 @@ class _CarScraperState extends State<CarScraper> {
                                   Expanded(
                                     child: Container(
                                       decoration: BoxDecoration(
-                                        gradient: LinearGradient(
-                                          begin: Alignment.topLeft,
-                                          end: Alignment.bottomRight,
-                                          colors: [
-                                            const Color(0xFF2196F3)
-                                                .withOpacity(0.8),
-                                            const Color(0xFF1976D2)
-                                                .withOpacity(0.9),
-                                          ],
-                                        ),
+                                        gradient: Theme.of(context)
+                                                    .brightness ==
+                                                Brightness.light
+                                            ? LinearGradient(
+                                                begin: Alignment.topLeft,
+                                                end: Alignment.bottomRight,
+                                                colors: [
+                                                  custom_theme.light.shade400,
+                                                  custom_theme.light.shade600,
+                                                ],
+                                              )
+                                            : LinearGradient(
+                                                begin: Alignment.topLeft,
+                                                end: Alignment.bottomRight,
+                                                colors: [
+                                                  custom_theme.dark.shade400,
+                                                  custom_theme.dark.shade600,
+                                                ],
+                                              ),
                                         borderRadius: BorderRadius.circular(12),
                                         boxShadow: [
                                           BoxShadow(
-                                            color: const Color(0xFF2196F3)
-                                                .withOpacity(0.3),
+                                            color: Theme.of(context)
+                                                        .brightness ==
+                                                    Brightness.light
+                                                ? custom_theme.light.shade400
+                                                    .withOpacity(0.3)
+                                                : custom_theme.dark.shade400
+                                                    .withOpacity(0.3),
                                             spreadRadius: 0,
                                             blurRadius: 10,
                                             offset: const Offset(0, 4),
@@ -796,21 +861,33 @@ class _CarScraperState extends State<CarScraper> {
                                   const SizedBox(width: 8),
                                   Container(
                                     decoration: BoxDecoration(
-                                      gradient: LinearGradient(
-                                        begin: Alignment.topLeft,
-                                        end: Alignment.bottomRight,
-                                        colors: [
-                                          const Color(0xFF4CAF50)
-                                              .withOpacity(0.8),
-                                          const Color(0xFF2E7D32)
-                                              .withOpacity(0.9),
-                                        ],
-                                      ),
+                                      gradient: Theme.of(context).brightness ==
+                                              Brightness.light
+                                          ? LinearGradient(
+                                              begin: Alignment.topLeft,
+                                              end: Alignment.bottomRight,
+                                              colors: [
+                                                Colors.green.shade400,
+                                                Colors.green.shade600,
+                                              ],
+                                            )
+                                          : LinearGradient(
+                                              begin: Alignment.topLeft,
+                                              end: Alignment.bottomRight,
+                                              colors: [
+                                                Colors.green.shade600,
+                                                Colors.green.shade800,
+                                              ],
+                                            ),
                                       borderRadius: BorderRadius.circular(12),
                                       boxShadow: [
                                         BoxShadow(
-                                          color: const Color(0xFF4CAF50)
-                                              .withOpacity(0.3),
+                                          color: Theme.of(context).brightness ==
+                                                  Brightness.light
+                                              ? Colors.green.shade400
+                                                  .withOpacity(0.3)
+                                              : Colors.green.shade600
+                                                  .withOpacity(0.3),
                                           spreadRadius: 0,
                                           blurRadius: 10,
                                           offset: const Offset(0, 4),
@@ -890,24 +967,30 @@ class _CarScraperState extends State<CarScraper> {
                           _availableImageUrls.isNotEmpty)
                         Container(
                           decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                              colors: isDark
-                                  ? [
-                                      Colors.grey[800]!.withOpacity(0.8),
-                                      Colors.grey[700]!.withOpacity(0.6),
-                                    ]
-                                  : [
-                                      Colors.white.withOpacity(0.1),
-                                      Colors.white.withOpacity(0.05),
-                                    ],
-                            ),
+                            gradient:
+                                Theme.of(context).brightness == Brightness.light
+                                    ? LinearGradient(
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                        colors: [
+                                          custom_theme.light.shade50,
+                                          custom_theme.light.shade100,
+                                        ],
+                                      )
+                                    : LinearGradient(
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                        colors: [
+                                          custom_theme.dark.shade800,
+                                          custom_theme.dark.shade700,
+                                        ],
+                                      ),
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
-                              color: isDark
-                                  ? Colors.grey[600]!.withOpacity(0.3)
-                                  : Colors.white.withOpacity(0.2),
+                              color: Theme.of(context).brightness ==
+                                      Brightness.light
+                                  ? custom_theme.light.shade300
+                                  : custom_theme.dark.shade600,
                               width: 1,
                             ),
                             boxShadow: [
@@ -931,8 +1014,10 @@ class _CarScraperState extends State<CarScraper> {
                                   style: TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,
-                                    color:
-                                        isDark ? Colors.white : Colors.black87,
+                                    color: Theme.of(context).brightness ==
+                                            Brightness.light
+                                        ? custom_theme.light.shade900
+                                        : custom_theme.dark.shade100,
                                     fontFamily: 'Tajawal',
                                   ),
                                 ),
@@ -940,9 +1025,10 @@ class _CarScraperState extends State<CarScraper> {
                                 Text(
                                   '${_selectedImageUrls.length} of ${_availableImageUrls.length} images selected',
                                   style: TextStyle(
-                                    color: isDark
-                                        ? Colors.white.withOpacity(0.8)
-                                        : Colors.black87.withOpacity(0.7),
+                                    color: Theme.of(context).brightness ==
+                                            Brightness.light
+                                        ? custom_theme.light.shade700
+                                        : custom_theme.dark.shade300,
                                     fontSize: 14,
                                     fontFamily: 'Tajawal',
                                   ),
@@ -1036,12 +1122,16 @@ class _CarScraperState extends State<CarScraper> {
                       if (_scrapedData != null)
                         Container(
                           decoration: BoxDecoration(
-                            color: isDark ? Colors.grey[800] : Colors.white,
+                            color:
+                                Theme.of(context).brightness == Brightness.light
+                                    ? custom_theme.light.shade50
+                                    : custom_theme.dark.shade800,
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
-                              color: isDark
-                                  ? Colors.grey[600]!.withOpacity(0.3)
-                                  : Colors.white.withOpacity(0.2),
+                              color: Theme.of(context).brightness ==
+                                      Brightness.light
+                                  ? custom_theme.light.shade300
+                                  : custom_theme.dark.shade600,
                               width: 1,
                             ),
                             boxShadow: [
@@ -1065,8 +1155,10 @@ class _CarScraperState extends State<CarScraper> {
                                   style: TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,
-                                    color:
-                                        isDark ? Colors.white : Colors.black87,
+                                    color: Theme.of(context).brightness ==
+                                            Brightness.light
+                                        ? custom_theme.light.shade900
+                                        : custom_theme.dark.shade100,
                                     fontFamily: 'Tajawal',
                                   ),
                                 ),
@@ -1267,21 +1359,18 @@ class _CarScraperState extends State<CarScraper> {
       floatingActionButton: _scrapedData != null
           ? Container(
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    const Color(0xFF4CAF50).withOpacity(0.9),
-                    const Color(0xFF2E7D32).withOpacity(0.9),
-                  ],
-                ),
+                color: Theme.of(context).brightness == Brightness.light
+                    ? Colors.green.shade600
+                    : Colors.green.shade700,
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFF4CAF50).withOpacity(0.4),
+                    color: Theme.of(context).brightness == Brightness.light
+                        ? Colors.green.shade400.withOpacity(0.3)
+                        : Colors.green.shade600.withOpacity(0.3),
                     spreadRadius: 0,
-                    blurRadius: 15,
-                    offset: const Offset(0, 4),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
                   ),
                 ],
               ),

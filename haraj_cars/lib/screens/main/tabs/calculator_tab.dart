@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../tools/calculator_viewmodel.dart';
 import '../../../services/car_fee_calculator.dart';
+import '../../../tools/Palette/theme.dart';
+import '../../../tools/Palette/gradients.dart';
 
 class CalculatorTab extends StatefulWidget {
   const CalculatorTab({Key? key}) : super(key: key);
@@ -234,15 +236,10 @@ class _CalculatorTabState extends State<CalculatorTab> {
         }
 
         return Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                Color(0xFF1E3A8A),
-                Color(0xFF3B82F6),
-              ],
-            ),
+          decoration: BoxDecoration(
+            gradient: Theme.of(context).brightness == Brightness.dark
+                ? DarkGradient.main
+                : LightGradient.main,
           ),
           child: SafeArea(
             child: Scaffold(
@@ -328,7 +325,10 @@ class _CalculatorTabState extends State<CalculatorTab> {
                                 ),
                               ),
                             ),
-                            dropdownColor: const Color(0xFF1E3A8A),
+                            dropdownColor:
+                                Theme.of(context).brightness == Brightness.dark
+                                    ? dark[800]
+                                    : light[800],
                             style: const TextStyle(
                               color: Colors.white,
                               fontFamily: 'Tajawal',
@@ -412,7 +412,9 @@ class _CalculatorTabState extends State<CalculatorTab> {
                                 : null,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: viewModel.canCalculate
-                              ? const Color(0xFFFF9500)
+                              ? (Theme.of(context).brightness == Brightness.dark
+                                  ? dark[600]
+                                  : light[600])
                               : Colors.grey,
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(
@@ -474,7 +476,7 @@ class _CalculatorTabState extends State<CalculatorTab> {
                         viewModel.currencySymbol,
                       ),
 
-                    const SizedBox(height: 50),
+                    const SizedBox(height: 75),
                   ],
                 ),
               ),

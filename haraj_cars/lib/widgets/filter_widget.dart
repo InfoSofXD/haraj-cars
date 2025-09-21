@@ -134,7 +134,9 @@ class _FilterPageState extends State<FilterPage> {
             child: Text(
               'Clear All',
               style: TextStyle(
-                color: colorScheme.primary,
+                color: theme.brightness == Brightness.dark
+                    ? Colors.white
+                    : colorScheme.primary,
                 fontFamily: 'Tajawal',
                 fontWeight: FontWeight.w600,
               ),

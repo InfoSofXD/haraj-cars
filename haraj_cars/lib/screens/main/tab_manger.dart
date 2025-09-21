@@ -498,12 +498,12 @@ class _TabMangerScreenState extends State<TabMangerScreen>
                           onShowStatusUpdate: _showStatusUpdateDialog,
                           pageController: _pageController,
                         ),
+                        // Calculator tab
+                        const CalculatorTab(),
                         // Community tab
                         CommunityTab(isAdmin: _isAdmin),
                         // Favorites tab
                         const FavoritesTab(),
-                        // Calculator tab
-                        const CalculatorTab(),
                         // Account tab
                         const AccountTab(),
                       ],

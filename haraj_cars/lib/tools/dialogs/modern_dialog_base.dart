@@ -108,7 +108,8 @@ class ModernDialogBase extends StatelessWidget {
                             ),
                             child: Icon(
                               icon,
-                              color: iconColor ?? colorScheme.primary,
+                              color: iconColor ??
+                                  (isDark ? Colors.white : colorScheme.primary),
                               size: 24,
                             ),
                           ),
