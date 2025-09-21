@@ -192,7 +192,7 @@ class _CustomWindowFrameState extends State<CustomWindowFrame>
                     ],
                   ),
                   child: Image.asset(
-                    'assets/splash/splash_icon.png',
+                    'assets/logo/haraj_logo.png',
                     width: 20,
                     height: 20,
                     fit: BoxFit.contain,

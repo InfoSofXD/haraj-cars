@@ -30,7 +30,7 @@ class _SplashScreenState extends State<SplashScreen> {
         children: [
           Center(
             child: Image.asset(
-              'assets/splash/splash_icon.png',
+              'assets/logo/haraj_logo.png',
               width: 250,
               height: 250,
             ),
@@ -40,7 +40,7 @@ class _SplashScreenState extends State<SplashScreen> {
             left: 0,
             right: 0,
             child: Image.asset(
-              'assets/splash/branding.png',
+              'assets/logo/branding.png',
               width: 50,
               height: 50,
               alignment: Alignment.bottomCenter,
