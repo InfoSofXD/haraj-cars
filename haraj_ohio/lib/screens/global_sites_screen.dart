@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:ui';
 import '../tools/cards/site_card.dart';
-import '../../tools/Palette/theme.dart' as custom_theme;
 
 class GlobalSitesScreen extends StatelessWidget {
   const GlobalSitesScreen({Key? key}) : super(key: key);

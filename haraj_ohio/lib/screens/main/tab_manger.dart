@@ -16,8 +16,6 @@ import '../car_scraper_screen.dart';
 import '../car_details_screen.dart';
 import 'tabs/cars_tab.dart';
 import 'tabs/favorites_tab.dart';
-import '../global_sites_screen.dart';
-import '../info_screen.dart';
 import 'tabs/account_tab.dart';
 import 'tabs/community_tab.dart';
 import 'tabs/dashboard_tab.dart';

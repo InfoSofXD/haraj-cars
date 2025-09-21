@@ -1,28 +1,28 @@
 # flutter pub run flutter_launcher_icons
 flutter_launcher_icons:
-  image_path: "assets/logo/app_icon.png"
+  image_path: "assets/logo/haraj_logo.png"
 
   android: "launcher_icon"
-  # image_path_android: "assets/logo/app_icon.png"
+  # image_path_android: "assets/logo/haraj_logo.png"
   min_sdk_android: 21 # android min sdk min:16, default 21
   # adaptive_icon_background: "assets/logo/background.png"
   # adaptive_icon_foreground: "assets/logo/foreground.png"
 
   ios: true
-  # image_path_ios: "assets/logo/app_icon.png"
+  # image_path_ios: "assets/logo/haraj_logo.png"
   remove_alpha_channel_ios: true
 
   web:
     generate: true
-    image_path: "assets/logo/app_icon.png"
+    image_path: "assets/logo/haraj_logo.png"
     background_color: "#26725A"
     theme_color: "#26725A"
 
   windows:
     generate: true
-    image_path: "assets/logo/app_icon.png"
+    image_path: "assets/logo/haraj_logo.png"
     icon_size: 256
 
   macos:
     generate: true
-    image_path: "assets/logo/app_icon.png"
+    image_path: "assets/logo/haraj_logo.png"

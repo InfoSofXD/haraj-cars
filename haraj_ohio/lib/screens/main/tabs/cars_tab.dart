@@ -833,7 +833,7 @@ class _CarsTabState extends State<CarsTab> {
                           : Colors.red.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Text(
+                    child: const Text(
                       'Clear All',
                       style: TextStyle(
                         fontSize: 12,
@@ -892,7 +892,6 @@ class _CarsTabState extends State<CarsTab> {
   }
 
   Widget _buildActionButtons() {
-    final theme = Theme.of(context);
     final hasActiveFilters = _selectedBrand.isNotEmpty ||
         _selectedYear.isNotEmpty ||
         _selectedCondition.isNotEmpty ||

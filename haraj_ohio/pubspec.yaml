@@ -21,6 +21,7 @@ dependencies:
   uuid: ^4.2.2
   shared_preferences: ^2.2.2
   get_it: ^7.6.4
+  provider: ^6.1.5+1
 
   # UI Components
   flutter_zoom_drawer: ^3.0.0
@@ -64,9 +65,7 @@ flutter:
 
     # App Logo & Splash & Icon
     - assets/logo/haraj_logo.png
-    - assets/logo/app_icon.png
-    - assets/splash/splash_icon.png
-    - assets/splash/branding.png
+    - assets/logo/branding.png
 
     # Language files
     - assets/langs/

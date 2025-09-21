@@ -1,6 +1,6 @@
-# Splash Screen
+# logo Screen
 
-flutter_native_splash:
+flutter_native_logo:
   
   # Platform
   android: true
@@ -8,24 +8,24 @@ flutter_native_splash:
   web: true
   
   # Light
-  image: "assets/splash/splash_icon.png"
+  image: "assets/logo/haraj_logo.png"
   color: "#26725A"
-  branding: "assets/splash/branding.png"
+  branding: "assets/logo/branding.png"
   
   # Dark
-  image_dark: "assets/splash/splash_icon.png"
+  image_dark: "assets/logo/haraj_logo.png"
   color_dark: "#424242"
-  branding_dark: "assets/splash/branding.png"
+  branding_dark: "assets/logo/branding.png"
 
   android_12:
 
     # Light
-    image: "assets/splash/splash_icon.png"
+    image: "assets/logo/haraj_logo.png"
     color: "#26725A"
-    branding: "assets/splash/branding.png"
+    branding: "assets/logo/branding.png"
 
     # Dark
-    image_dark: "assets/splash/splash_icon.png"
+    image_dark: "assets/logo/haraj_logo.png"
     color_dark: "#424242"
-    branding_dark: "assets/splash/branding.png"
+    branding_dark: "assets/logo/branding.png"
     
